@@ -12,7 +12,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 
 ## Nós disponíveis
 
-- **Diztraido: Metadata Reader**: painel visual sem saídas. Ao escolher ou enviar uma imagem, mostra imediatamente o JSON completo dos metadados, sem executar o workflow.
+- **Diztraido: Metadata Reader**: painel visual sem saídas. Ao escolher ou enviar uma imagem, mostra imediatamente o JSON completo dos metadados e permite buscá-lo em tempo real, sem executar o workflow.
 - **Diztraido: Metadata Reader Advanced**: extrai prompt, prompt negativo, seed, steps, CFG, sampler, scheduler, modelo, dimensões e os metadados em texto/JSON.
 - **Backend Random Seed**: gera uma seed nova a cada execução do workflow.
 
