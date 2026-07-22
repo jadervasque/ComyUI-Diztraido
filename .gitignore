@@ -1,0 +1,8 @@
+# Artefatos gerados pelo Python
+__pycache__/
+*.py[cod]
+
+# Ambientes e ferramentas locais
+.venv/
+.pytest_cache/
+.mypy_cache/
