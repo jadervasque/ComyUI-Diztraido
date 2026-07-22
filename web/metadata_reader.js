@@ -36,7 +36,7 @@ function createHighlightLayer(metadataWidget) {
         inset: "0",
         margin: "0",
         padding: inputStyle.padding,
-        border: inputStyle.border,
+        border: "0",
         boxSizing: "border-box",
         font: inputStyle.font,
         letterSpacing: inputStyle.letterSpacing,
@@ -53,6 +53,8 @@ function createHighlightLayer(metadataWidget) {
     container.appendChild(layer);
     input.style.position = "relative";
     input.style.zIndex = "1";
+    input.style.border = "1px solid #6b7280";
+    input.style.borderRadius = "4px";
     input.style.background = "transparent";
     input.style.color = "transparent";
     input.style.caretColor = inputStyle.color;
