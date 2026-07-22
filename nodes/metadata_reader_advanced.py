@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-import os
-
-import folder_paths
 
 from ..services.image_metadata import as_float, as_int, read_image_metadata
+from .image_input import image_input_types, validate_image
 
 try:
     import comfy.samplers
@@ -35,26 +33,25 @@ class DiztraidoImageMetadataReaderAdvanced:
 
     @classmethod
     def INPUT_TYPES(cls):
-        input_dir = folder_paths.get_input_directory()
-        files = [name for name in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, name))]
-        image_files = folder_paths.filter_files_content_types(files, ["image"])
-        return {"required": {"image": (sorted(image_files), {"image_upload": True})}}
+        return image_input_types()
 
     @classmethod
     def IS_CHANGED(cls, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+        from folder_paths import get_annotated_filepath
+
+        image_path = get_annotated_filepath(image)
         with open(image_path, "rb") as image_file:
             digest = hashlib.file_digest(image_file, "sha256").hexdigest()
         return digest
 
     @classmethod
     def VALIDATE_INPUTS(cls, image):
-        if not folder_paths.exists_annotated_filepath(image):
-            return f"Invalid image file: {image}"
-        return True
+        return validate_image(image)
 
     def read_metadata(self, image):
-        result = read_image_metadata(folder_paths.get_annotated_filepath(image))
+        from folder_paths import get_annotated_filepath
+
+        result = read_image_metadata(get_annotated_filepath(image))
         details = result["details"]
         return {
             "ui": {"text": [result["metadata_text"]]},

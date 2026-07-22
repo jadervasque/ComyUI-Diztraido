@@ -33,6 +33,18 @@ class ImageMetadataTests(unittest.TestCase):
         self.assertEqual(result["details"]["cfg"], "7")
         self.assertEqual(json.loads(result["metadata_json"])["file"]["width"], 64)
 
+    def test_converts_non_finite_json_values_to_null(self):
+        with tempfile.TemporaryDirectory() as directory:
+            image_path = Path(directory) / "metadata.png"
+            png_info = PngImagePlugin.PngInfo()
+            png_info.add_text("prompt", '{"changed": [NaN, Infinity, -Infinity]}')
+            Image.new("RGB", (16, 8)).save(image_path, pnginfo=png_info)
+
+            result = read_image_metadata(image_path)
+
+        metadata = json.loads(result["metadata_json"])
+        self.assertEqual(metadata["metadata"]["prompt"]["changed"], [None, None, None])
+
 
 if __name__ == "__main__":
     unittest.main()

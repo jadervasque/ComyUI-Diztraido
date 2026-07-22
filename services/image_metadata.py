@@ -7,6 +7,7 @@ extração de PNG, EXIF e formatos de metadados usados por geradores de imagem.
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -53,6 +54,8 @@ def json_safe(value: Any) -> Any:
         return [json_safe(item) for item in value]
 
     value = to_text(value)
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
     return str(value)
@@ -333,7 +336,13 @@ def read_image_metadata(file_path: str | Path) -> dict[str, Any]:
     return {
         "details": details,
         "metadata_text": format_summary(normalized, details),
-        "metadata_json": json.dumps(normalized, ensure_ascii=False, indent=2, sort_keys=True),
+        "metadata_json": json.dumps(
+            normalized,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        ),
         "prompt": str(details.get("prompt", "")),
         "negative_prompt": str(details.get("negative_prompt", "")),
     }
