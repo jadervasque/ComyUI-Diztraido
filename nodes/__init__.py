@@ -5,6 +5,8 @@ from .metadata_reader import DiztraidoMetadataReader
 from .random_seed import BackendRandomSeed
 from .reference_chain import DiztraidoReferenceChain
 from .processing_bundle import DiztraidoProcessingBundle
+from .load_flux2_models import DiztraidoLoadFlux2Models
+from .load_flux1_models import DiztraidoLoadFlux1Models
 
 NODE_CLASS_MAPPINGS = {
     "DiztraidoMetadataReader": DiztraidoMetadataReader,
@@ -12,6 +14,8 @@ NODE_CLASS_MAPPINGS = {
     "BackendRandomSeed": BackendRandomSeed,
     "DiztraidoReferenceChain": DiztraidoReferenceChain,
     "DiztraidoProcessingBundle": DiztraidoProcessingBundle,
+    "DiztraidoLoadFlux2Models": DiztraidoLoadFlux2Models,
+    "DiztraidoLoadFlux1Models": DiztraidoLoadFlux1Models,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -20,6 +24,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "BackendRandomSeed": "Backend Random Seed",
     "DiztraidoReferenceChain": "Flux Load References",
     "DiztraidoProcessingBundle": "Flux Sampler",
+    "DiztraidoLoadFlux2Models": "Load Flux.2 Models",
+    "DiztraidoLoadFlux1Models": "Load Flux.1 Models",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
