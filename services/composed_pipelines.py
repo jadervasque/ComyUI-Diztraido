@@ -25,6 +25,9 @@ def extract_result(value: Any, index: int = 0) -> Any:
     if isinstance(value, dict) and "result" in value:
         value = value["result"]
 
+    if not isinstance(value, dict) and hasattr(value, "result"):
+        value = value.result
+
     # Outputs do ComfyUI costumam vir em tuple; ja tipos de dados validos,
     # como CONDITIONING, podem ser list e nao devem ser truncados.
     if isinstance(value, tuple):

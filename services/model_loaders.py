@@ -47,6 +47,9 @@ def extract_result(value: Any, index: int = 0) -> Any:
     if isinstance(value, dict) and "result" in value:
         value = value["result"]
 
+    if not isinstance(value, dict) and hasattr(value, "result"):
+        value = value.result
+
     # Mesma regra dos pipelines: apenas tuple representa envelope de outputs.
     if isinstance(value, tuple):
         return value[index]

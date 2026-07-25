@@ -7,6 +7,15 @@ import unittest
 from services.composed_pipelines import normalize_processing_params, run_processing_pipeline
 
 
+class _NodeOutputLike:
+    def __init__(self, *args):
+        self.args = args
+
+    @property
+    def result(self):
+        return self.args if self.args else None
+
+
 class _RandomNoiseNode:
     FUNCTION = "build"
 
@@ -30,6 +39,15 @@ class _BasicGuiderListAwareNode:
         if len(conditioning) < 2 or len(conditioning[0]) != 2:
             raise AssertionError("conditioning foi truncado ou corrompido")
         return ("guider-ok",)
+
+
+class _BasicGuiderNodeOutputAwareNode:
+    FUNCTION = "build"
+
+    def build(self, model, conditioning):
+        if not isinstance(conditioning, list):
+            raise AssertionError("conditioning deveria ter sido extraido do NodeOutput")
+        return _NodeOutputLike("guider-node-output-ok")
 
 
 class _KSamplerSelectNode:
@@ -91,6 +109,18 @@ def _factory_list_aware(name):
     }[name]()
 
 
+def _factory_node_output_aware(name):
+    return {
+        "RandomNoise": _RandomNoiseNode,
+        "BasicGuider": _BasicGuiderNodeOutputAwareNode,
+        "KSamplerSelect": _KSamplerSelectNode,
+        "Flux2Scheduler": _Flux2SchedulerNode,
+        "EmptyFlux2LatentImage": _EmptyLatentNode,
+        "SamplerCustomAdvanced": _SamplerAdvancedNode,
+        "VAEDecode": _VAEDecodeNode,
+    }[name]()
+
+
 class ComposedProcessingTests(unittest.TestCase):
     def test_normalizes_params(self):
         params = normalize_processing_params(
@@ -144,6 +174,25 @@ class ComposedProcessingTests(unittest.TestCase):
         self.assertEqual(
             image,
             "image(sampled(noise(42)|guider-ok|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
+        )
+
+    def test_extracts_native_node_output_before_basic_guider(self):
+        conditioning = [["embed", {"a": 1}]]
+        image = run_processing_pipeline(
+            model="m0",
+            conditioning=conditioning,
+            vae="v0",
+            noise_seed=42,
+            sampler_name="euler",
+            steps=20,
+            width=1024,
+            height=768,
+            batch_size=1,
+            node_factory=_factory_node_output_aware,
+        )
+        self.assertEqual(
+            image,
+            "image(sampled(noise(42)|guider-node-output-ok|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
         )
 
 
