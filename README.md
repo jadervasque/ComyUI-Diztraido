@@ -20,6 +20,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 - **Load Flux.2 Models**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux2` como padrão no `Load CLIP`.
 - **Load Flux.2 Models + LoRAs**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
 - **Load Flux.1 Models**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux` como padrão no `DualCLIPLoader`.
+- **String Format**: monta uma string com entradas dinâmicas `STRING`, `INT`, `FLOAT` ou `BOOLEAN`, placeholders posicionais e expressões ternárias booleanas.
 
 ## Uso dos nós compostos
 
@@ -62,6 +63,23 @@ Opcional: conecte `initial_latent` para aplicar um `ReferenceLatent` inicial ant
 2. Configure os campos de `DualCLIPLoader` (com `type=flux` por padrão).
 3. Configure o `Load VAE`.
 4. Use as saídas `model`, `clip` e `vae` no workflow.
+
+### String Format
+
+1. Defina `input_count` para criar os sockets `input_1`, `input_2`, etc.
+2. Conecte valores `STRING`, `INT`, `FLOAT` ou `BOOLEAN`; o tipo é reconhecido automaticamente.
+3. Use `{1}`, `{2}`, etc. no campo `template` para inserir os valores pela posição.
+4. Use a saída `string` no restante do workflow.
+
+Exemplos:
+
+- `File_{1}_teste_{2}` produz `File_image_teste_10` para as entradas `image` e `10`.
+- `@{{1}?"Texto A":"Texto B"}` escolhe o texto usando `input_1`.
+- `@{{1}&&{2}?"Ambos":"Outro"}` exige que as duas entradas sejam verdadeiras.
+- `@{!({1}||{2})?"Nenhum":"Algum"}` combina negação e parênteses.
+- `{{nome}}_{1}` produz uma chave literal: `{nome}_valor`.
+
+Operadores suportados: `!`, `&`, `&&`, `|`, `||` e parênteses. `&&`/`&` têm precedência sobre `||`/`|`. Strings `true`, `1`, `yes` e `on` são verdadeiras; `false`, `0`, `no`, `off`, `none`, `null` e string vazia são falsas.
 
 ## Como adicionar um nó
 
