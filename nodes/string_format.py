@@ -24,7 +24,7 @@ class DiztraidoStringFormat:
     CATEGORY = "Diztraido/utils"
     DESCRIPTION = (
         "Substitui {1}, {2}, ... e avalia ternarios como "
-        '@{{1}&&{2}?"Texto A":"Texto B"}.'
+        '@{{1}=={2}&&{3}?"Texto A":"Texto B"}.'
     )
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("string",)

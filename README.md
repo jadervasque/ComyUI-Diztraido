@@ -75,11 +75,12 @@ Exemplos:
 
 - `File_{1}_teste_{2}` produz `File_image_teste_10` para as entradas `image` e `10`.
 - `@{{1}?"Texto A":"Texto B"}` escolhe o texto usando `input_1`.
+- `@{{1}=={2}?"Iguais":"Diferentes"}` compara os valores preservando seus tipos.
 - `@{{1}&&{2}?"Ambos":"Outro"}` exige que as duas entradas sejam verdadeiras.
 - `@{!({1}||{2})?"Nenhum":"Algum"}` combina negação e parênteses.
 - `{{nome}}_{1}` produz uma chave literal: `{nome}_valor`.
 
-Operadores suportados: `!`, `&`, `&&`, `|`, `||` e parênteses. `&&`/`&` têm precedência sobre `||`/`|`. Strings `true`, `1`, `yes` e `on` são verdadeiras; `false`, `0`, `no`, `off`, `none`, `null` e string vazia são falsas.
+Operadores suportados: `==`, `!=`, `<`, `<=`, `>`, `>=`, `!`, `&`, `&&`, `|`, `||` e parênteses. Comparações têm precedência sobre `&&`/`&`, que têm precedência sobre `||`/`|`. Strings `true`, `1`, `yes` e `on` são verdadeiras; `false`, `0`, `no`, `off`, `none`, `null` e string vazia são falsas.
 
 ## Como adicionar um nó
 

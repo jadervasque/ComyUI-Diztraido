@@ -63,6 +63,28 @@ def _tokenize_condition(expression: str, values: list[Any]) -> list[_Token]:
             tokens.append(_Token("OR"))
             position += 2
             continue
+        comparison = next(
+            (
+                (symbol, kind)
+                for symbol, kind in (
+                    ("==", "EQ"),
+                    ("!=", "NE"),
+                    ("<=", "LE"),
+                    (">=", "GE"),
+                )
+                if expression.startswith(symbol, position)
+            ),
+            None,
+        )
+        if comparison:
+            symbol, kind = comparison
+            tokens.append(_Token(kind))
+            position += len(symbol)
+            continue
+        if character in "<>":
+            tokens.append(_Token("LT" if character == "<" else "GT"))
+            position += 1
+            continue
         if character in "&|!()":
             tokens.append(_Token({"&": "AND", "|": "OR", "!": "NOT", "(": "LPAREN", ")": "RPAREN"}[character]))
             position += 1
@@ -72,7 +94,7 @@ def _tokenize_condition(expression: str, values: list[Any]) -> list[_Token]:
             if match is None:
                 raise StringFormatError(f"Placeholder invalido na condicao, posicao {position + 1}.")
             index = int(match.group(1))
-            tokens.append(_Token("VALUE", _as_bool(_value_at(index, values))))
+            tokens.append(_Token("VALUE", _value_at(index, values)))
             position = match.end()
             continue
 
@@ -107,34 +129,57 @@ class _ConditionParser:
         result = self.parse_or()
         if self.current.kind != "END":
             raise StringFormatError("Expressao booleana incompleta.")
-        return result
+        return _as_bool(result)
 
-    def parse_or(self) -> bool:
+    def parse_or(self) -> Any:
         result = self.parse_and()
         while self.current.kind == "OR":
             self.consume("OR")
             right = self.parse_and()
-            result = result or right
+            result = _as_bool(result) or _as_bool(right)
         return result
 
-    def parse_and(self) -> bool:
-        result = self.parse_unary()
+    def parse_and(self) -> Any:
+        result = self.parse_comparison()
         while self.current.kind == "AND":
             self.consume("AND")
-            right = self.parse_unary()
-            result = result and right
+            right = self.parse_comparison()
+            result = _as_bool(result) and _as_bool(right)
         return result
 
-    def parse_unary(self) -> bool:
+    def parse_comparison(self) -> Any:
+        left = self.parse_unary()
+        comparison_functions = {
+            "EQ": lambda first, second: first == second,
+            "NE": lambda first, second: first != second,
+            "LT": lambda first, second: first < second,
+            "LE": lambda first, second: first <= second,
+            "GT": lambda first, second: first > second,
+            "GE": lambda first, second: first >= second,
+        }
+        if self.current.kind not in comparison_functions:
+            return left
+
+        operator = self.current.kind
+        self.consume(operator)
+        right = self.parse_unary()
+        try:
+            return comparison_functions[operator](left, right)
+        except TypeError as error:
+            raise StringFormatError(
+                f"Valores incompativeis para comparacao: {type(left).__name__} e {type(right).__name__}."
+            ) from error
+
+    def parse_unary(self) -> Any:
         if self.current.kind == "NOT":
             self.consume("NOT")
-            return not self.parse_unary()
+            return not _as_bool(self.parse_unary())
         if self.current.kind == "LPAREN":
             self.consume("LPAREN")
             result = self.parse_or()
             self.consume("RPAREN")
             return result
-        return bool(self.consume("VALUE").value)
+        return self.consume("VALUE").value
 
 
 def _evaluate_condition(expression: str, values: list[Any]) -> bool:

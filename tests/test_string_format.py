@@ -69,6 +69,28 @@ class StringFormatTests(unittest.TestCase):
         self.assertEqual(format_string(template, [True, 7, 9]), "Enabled_7")
         self.assertEqual(format_string(template, [False, 7, 9]), "Disabled_9")
 
+    def test_compares_input_values_for_equality(self):
+        template = '@{{1}=={2}?"Sim":"Não"}'
+        self.assertEqual(format_string(template, ["A", "A"]), "Sim")
+        self.assertEqual(format_string(template, ["A", "B"]), "Não")
+
+    def test_supports_relational_comparisons_and_logical_composition(self):
+        cases = [
+            ("!=", ["A", "B"], "yes"),
+            ("<", [1, 2], "yes"),
+            ("<=", [2, 2], "yes"),
+            (">", [3.5, 2.0], "yes"),
+            (">=", [3, 3], "yes"),
+        ]
+        for operator, values, expected in cases:
+            with self.subTest(operator=operator):
+                template = f'@{{{{1}}{operator}{{2}}?"yes":"no"}}'
+                self.assertEqual(format_string(template, values), expected)
+
+        combined = '@{{1}=={2}&&{3}>{4}?"match":"no match"}'
+        self.assertEqual(format_string(combined, ["A", "A", 5, 2]), "match")
+        self.assertEqual(format_string(combined, ["A", "B", 5, 2]), "no match")
+
     def test_supports_csharp_style_literal_braces(self):
         self.assertEqual(format_string("{{name}}={1}", ["value"]), "{name}=value")
 
@@ -76,11 +98,15 @@ class StringFormatTests(unittest.TestCase):
         with self.assertRaisesRegex(StringFormatError, r"Input \{2\}"):
             format_string("{2}", ["only one"])
         with self.assertRaisesRegex(StringFormatError, "Token invalido"):
-            format_string('@{{1} == {2}?"yes":"no"}', [True, True])
+            format_string('@{{1} + {2}?"yes":"no"}', [True, True])
 
     def test_rejects_unclosed_ternary(self):
         with self.assertRaisesRegex(StringFormatError, "sem chave de fechamento"):
             format_string('@{{1}?"yes":"no"', [True])
+
+    def test_rejects_relational_comparison_between_incompatible_types(self):
+        with self.assertRaisesRegex(StringFormatError, "Valores incompativeis"):
+            format_string('@{{1}>{2}?"yes":"no"}', [1, "text"])
 
 
 class StringFormatNodeTests(unittest.TestCase):
