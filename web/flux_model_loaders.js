@@ -30,16 +30,51 @@ function setWidgetVisibility(widget, visible) {
     }
 }
 
-function fitNodeToContent(node) {
-    if (!node || typeof node.computeSize !== "function" || typeof node.setSize !== "function") {
-        return;
-    }
+function createLayoutController(node) {
+    let extraHeight = 0;
+    let isApplyingSize = false;
 
-    const computed = node.computeSize();
-    const currentWidth = Number(node.size?.[0]) || 0;
-    const computedWidth = Number(computed?.[0]) || currentWidth;
-    const computedHeight = Math.max(0, Number(computed?.[1]) || 0);
-    node.setSize([Math.max(currentWidth, computedWidth), computedHeight]);
+    const measureContent = () => {
+        const computed = node.computeSize();
+        return {
+            width: Math.max(0, Number(computed?.[0]) || 0),
+            height: Math.max(0, Number(computed?.[1]) || 0),
+        };
+    };
+
+    const captureExtraHeight = () => {
+        if (isApplyingSize) {
+            return;
+        }
+        const content = measureContent();
+        const currentHeight = Number(node.size?.[1]) || content.height;
+        extraHeight = Math.max(0, currentHeight - content.height);
+    };
+
+    const fit = () => {
+        const content = measureContent();
+        const currentWidth = Number(node.size?.[0]) || content.width;
+        isApplyingSize = true;
+        node.setSize([
+            Math.max(currentWidth, content.width),
+            content.height + extraHeight,
+        ]);
+        isApplyingSize = false;
+    };
+
+    const resetAndFit = () => {
+        extraHeight = 0;
+        fit();
+    };
+
+    const originalOnResize = node.onResize;
+    node.onResize = function () {
+        const result = originalOnResize?.apply(this, arguments);
+        captureExtraHeight();
+        return result;
+    };
+
+    return { captureExtraHeight, fit, resetAndFit };
 }
 
 function getLoraWidgetGroups(node) {
@@ -54,10 +89,14 @@ function getLoraWidgetGroups(node) {
     return groups;
 }
 
-function updateVisibleLoras(node, countWidget, groups) {
+function updateVisibleLoras(node, countWidget, groups, layout, mode = "preserve") {
     const count = clampCount(countWidget?.value ?? 0);
     if (countWidget) {
         countWidget.value = count;
+    }
+
+    if (mode === "preserve") {
+        layout.captureExtraHeight();
     }
 
     groups.forEach((group, index) => {
@@ -66,12 +105,19 @@ function updateVisibleLoras(node, countWidget, groups) {
         }
     });
 
-    fitNodeToContent(node);
-    requestAnimationFrame(() => fitNodeToContent(node));
+    if (mode === "restore") {
+        layout.captureExtraHeight();
+    }
+
+    if (mode === "reset") {
+        layout.resetAndFit();
+    } else {
+        layout.fit();
+    }
     node.setDirtyCanvas(true, true);
 }
 
-function createLoraControls(node, countWidget, groups) {
+function createLoraControls(node, countWidget, groups, layout) {
     const controls = document.createElement("div");
     Object.assign(controls.style, {
         display: "flex",
@@ -91,7 +137,7 @@ function createLoraControls(node, countWidget, groups) {
         button.addEventListener("click", (event) => {
             event.preventDefault();
             countWidget.value = clampCount((countWidget.value ?? 0) + delta);
-            updateVisibleLoras(node, countWidget, groups);
+            updateVisibleLoras(node, countWidget, groups, layout);
         });
         controls.appendChild(button);
     }
@@ -112,16 +158,20 @@ function applyLoraControls(node) {
     }
 
     const groups = getLoraWidgetGroups(node);
+    const layout = createLayoutController(node);
     const originalCallback = countWidget.callback;
     countWidget.callback = function (value) {
         const result = originalCallback?.apply(this, arguments);
         countWidget.value = clampCount(value ?? countWidget.value);
-        updateVisibleLoras(node, countWidget, groups);
+        if (!node.__diztraidoIsConfiguringLoras) {
+            updateVisibleLoras(node, countWidget, groups, layout);
+        }
         return result;
     };
 
-    createLoraControls(node, countWidget, groups);
-    updateVisibleLoras(node, countWidget, groups);
+    createLoraControls(node, countWidget, groups, layout);
+    updateVisibleLoras(node, countWidget, groups, layout, "reset");
+    node.__diztraidoLoraLayout = layout;
     node.__diztraidoLoraControlsReady = true;
 }
 
@@ -141,12 +191,16 @@ app.registerExtension({
 
         const originalOnConfigure = nodeType.prototype.onConfigure;
         nodeType.prototype.onConfigure = function () {
+            this.__diztraidoIsConfiguringLoras = true;
             const result = originalOnConfigure?.apply(this, arguments);
+            this.__diztraidoIsConfiguringLoras = false;
             requestAnimationFrame(() => {
                 updateVisibleLoras(
                     this,
                     this.widgets?.find((widget) => widget.name === "lora_count"),
                     getLoraWidgetGroups(this),
+                    this.__diztraidoLoraLayout,
+                    "restore",
                 );
             });
             return result;

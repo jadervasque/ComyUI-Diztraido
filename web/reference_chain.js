@@ -24,7 +24,14 @@ function setWidgetVisibility(widget, visible) {
         return;
     }
 
+    if (!Object.prototype.hasOwnProperty.call(widget, "__diztraidoOriginalComputeSize")) {
+        widget.__diztraidoOriginalComputeSize = widget.computeSize;
+    }
+
     widget.hidden = !visible;
+    widget.computeSize = visible
+        ? widget.__diztraidoOriginalComputeSize
+        : () => [0, -4];
 
     if (widget.inputEl) {
         widget.inputEl.style.display = visible ? "" : "none";
@@ -204,7 +211,7 @@ function createPreviewWidget(node, getReferenceCount) {
     return { container, syncLayout };
 }
 
-function createControls(node, countWidget, referenceWidgets, onChanged) {
+function createControls(node, countWidget, onChanged) {
     const controls = document.createElement("div");
     controls.style.display = "flex";
     controls.style.gap = "6px";
@@ -230,14 +237,12 @@ function createControls(node, countWidget, referenceWidgets, onChanged) {
     addButton.addEventListener("click", (event) => {
         event.preventDefault();
         countWidget.value = clampCount((countWidget.value ?? 0) + 1);
-        updateVisibleReferences(node, countWidget, referenceWidgets);
         onChanged?.();
     });
 
     removeButton.addEventListener("click", (event) => {
         event.preventDefault();
         countWidget.value = clampCount((countWidget.value ?? 0) - 1);
-        updateVisibleReferences(node, countWidget, referenceWidgets);
         onChanged?.();
     });
 
@@ -258,7 +263,8 @@ function fitNodeToContent(node, minWidth = 540) {
         return;
     }
     const computed = node.computeSize();
-    const width = Math.max(minWidth, Number(computed?.[0]) || minWidth);
+    const currentWidth = Number(node.size?.[0]) || minWidth;
+    const width = Math.max(minWidth, currentWidth, Number(computed?.[0]) || minWidth);
     const height = Math.max(0, Number(computed?.[1]) || 0);
     node.setSize([width, height]);
 }
@@ -298,6 +304,14 @@ app.registerExtension({
                 () => clampCount(countWidget?.value ?? 0),
             );
             const previewRoot = previewWidget.container;
+            let isFittingToContent = false;
+
+            const fitReferencesToContent = () => {
+                isFittingToContent = true;
+                fitNodeToContent(node, 540);
+                previewWidget.syncLayout();
+                isFittingToContent = false;
+            };
 
             const refreshPreview = () => {
                 renderReferencesPreview(previewRoot, countWidget.value, referenceWidgets);
@@ -310,14 +324,18 @@ app.registerExtension({
                 updateVisibleReferences(node, countWidget, referenceWidgets);
                 refreshPreview();
             };
+
+            const updateCountAndFit = () => {
+                syncState();
+                fitReferencesToContent();
+            };
             node.__diztraidoSyncReferences = syncState;
 
             const originalCallback = countWidget.callback;
             countWidget.callback = function (value) {
                 const callbackResult = originalCallback?.apply(this, arguments);
                 countWidget.value = clampCount(value ?? countWidget.value);
-                updateVisibleReferences(node, countWidget, referenceWidgets);
-                refreshPreview();
+                updateCountAndFit();
                 return callbackResult;
             };
 
@@ -336,20 +354,20 @@ app.registerExtension({
                 };
             });
 
-            createControls(node, countWidget, referenceWidgets, syncState);
+            createControls(node, countWidget, updateCountAndFit);
             syncState();
             defer(syncState, 2);
 
             // Evita faixa vazia inicial: o no nasce com altura real dos widgets.
             defer(() => {
-                fitNodeToContent(node, 540);
+                fitReferencesToContent();
                 refreshPreview();
             }, 2);
 
             const originalOnResize = node.onResize;
             node.onResize = function () {
                 const resizeResult = originalOnResize?.apply(this, arguments);
-                previewWidget.syncLayout({ fromResize: true });
+                previewWidget.syncLayout({ fromResize: !isFittingToContent });
                 disableNativePreview(node);
                 return resizeResult;
             };
