@@ -47,6 +47,14 @@ def _value_at(index: int, values: list[Any]) -> Any:
     return values[index - 1]
 
 
+def _remove_commented_lines(template: str) -> str:
+    return "".join(
+        line
+        for line in template.splitlines(keepends=True)
+        if not line.lstrip(" \t").startswith("#")
+    )
+
+
 def _tokenize_condition(expression: str, values: list[Any]) -> list[_Token]:
     tokens: list[_Token] = []
     position = 0
@@ -299,4 +307,4 @@ def format_string(template: str, values: list[Any]) -> str:
     """Renderiza placeholders 1-based e expressoes ternarias booleanas."""
     if not isinstance(template, str):
         raise StringFormatError("O template deve ser uma string.")
-    return _render_template(template, values)
+    return _render_template(_remove_commented_lines(template), values)

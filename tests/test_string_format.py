@@ -94,6 +94,17 @@ class StringFormatTests(unittest.TestCase):
     def test_supports_csharp_style_literal_braces(self):
         self.assertEqual(format_string("{{name}}={1}", ["value"]), "{name}=value")
 
+    def test_removes_lines_starting_with_comment_marker(self):
+        template = "File_{1}\n# ignored {99}\n  # also ignored\nEnd_{2}"
+        self.assertEqual(format_string(template, ["A", "B"]), "File_A\nEnd_B")
+
+    def test_preserves_hash_outside_start_of_line(self):
+        template = "Color #1\nValue_{1} # suffix"
+        self.assertEqual(format_string(template, [7]), "Color #1\nValue_7 # suffix")
+
+    def test_supports_template_containing_only_comments(self):
+        self.assertEqual(format_string("# first\n\t# second", []), "")
+
     def test_rejects_missing_input_and_invalid_condition(self):
         with self.assertRaisesRegex(StringFormatError, r"Input \{2\}"):
             format_string("{2}", ["only one"])

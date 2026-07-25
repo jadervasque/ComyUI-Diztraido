@@ -79,6 +79,7 @@ Exemplos:
 - `@{{1}&&{2}?"Ambos":"Outro"}` exige que as duas entradas sejam verdadeiras.
 - `@{!({1}||{2})?"Nenhum":"Algum"}` combina negação e parênteses.
 - `{{nome}}_{1}` produz uma chave literal: `{nome}_valor`.
+- Uma linha iniciada por `#` (inclusive após espaços) é tratada como comentário e removida da saída.
 
 Operadores suportados: `==`, `!=`, `<`, `<=`, `>`, `>=`, `!`, `&`, `&&`, `|`, `||` e parênteses. Comparações têm precedência sobre `&&`/`&`, que têm precedência sobre `||`/`|`. Strings `true`, `1`, `yes` e `on` são verdadeiras; `false`, `0`, `no`, `off`, `none`, `null` e string vazia são falsas.
 
