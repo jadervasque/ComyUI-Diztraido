@@ -135,10 +135,12 @@ class ModelLoadersTests(unittest.TestCase):
     def test_flux2_schema_overrides_clip_type_default(self):
         required, _ = build_flux2_loader_schema(_resolver)
         self.assertEqual(required["type"][1]["default"], "flux2")
+        self.assertFalse(any(name.startswith("__sep_") for name in required))
 
     def test_flux1_schema_overrides_dual_clip_type_default(self):
         required, _ = build_flux1_loader_schema(_resolver)
         self.assertEqual(required["type"][1]["default"], "flux")
+        self.assertFalse(any(name.startswith("__sep_") for name in required))
 
     def test_flux2_loader_runs_all_three_nodes(self):
         model, clip, vae = load_flux2_models(

@@ -98,9 +98,7 @@ def build_flux2_loader_schema(
 
     required: dict[str, Any] = {}
     required.update(model_inputs)
-    required["__sep_model_clip"] = ("STRING", {"default": "", "multiline": False})
     required.update(clip_inputs)
-    required["__sep_clip_vae"] = ("STRING", {"default": "", "multiline": False})
     required.update(vae_inputs)
 
     sections = {
@@ -123,7 +121,6 @@ def build_flux2_lora_loader_schema(
         lora_choices = [""] + lora_choices
     lora_select = (lora_choices, copy.deepcopy(lora_select[1]) if isinstance(lora_select, tuple) and len(lora_select) > 1 else {})
 
-    required["__sep_vae_lora"] = ("STRING", {"default": "", "multiline": False})
     required["lora_count"] = ("INT", {"default": 0, "min": 0, "max": MAX_LORAS})
 
     lora_keys: list[str] = []
@@ -151,9 +148,7 @@ def build_flux1_loader_schema(
 
     required: dict[str, Any] = {}
     required.update(model_inputs)
-    required["__sep_model_clip"] = ("STRING", {"default": "", "multiline": False})
     required.update(clip_inputs)
-    required["__sep_clip_vae"] = ("STRING", {"default": "", "multiline": False})
     required.update(vae_inputs)
 
     sections = {
