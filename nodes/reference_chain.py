@@ -13,8 +13,8 @@ class DiztraidoReferenceChain:
     """Aplica FluxGuidance + cadeia de ReferenceLatent em um unico no."""
 
     CATEGORY = "Diztraido/flux"
-    RETURN_TYPES = ("CONDITIONING",)
-    RETURN_NAMES = ("conditioning",)
+    RETURN_TYPES = ("CONDITIONING", "VAE")
+    RETURN_NAMES = ("conditioning", "vae")
     FUNCTION = "apply_references"
 
     @staticmethod
@@ -58,4 +58,4 @@ class DiztraidoReferenceChain:
             initial_latent=initial_latent,
             **kwargs,
         )
-        return (result,)
+        return result, vae

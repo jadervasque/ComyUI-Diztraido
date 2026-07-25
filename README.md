@@ -15,7 +15,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 - **Diztraido: Metadata Reader**: painel visual sem saídas. Ao escolher ou enviar uma imagem, mostra imediatamente o JSON completo dos metadados e permite buscá-lo em tempo real, sem executar o workflow.
 - **Diztraido: Metadata Reader Advanced**: extrai prompt, prompt negativo, seed, steps, CFG, sampler, scheduler, modelo, dimensões e os metadados em texto/JSON.
 - **Backend Random Seed**: gera uma seed nova a cada execução do workflow.
-- **Flux Load References**: concentra `CLIPTextEncode` + `FluxGuidance` + encadeamento de referências (`LoadImage` -> `VAEEncode` -> `ReferenceLatent`) em um único nó. Possui botões **Add Reference** e **Remove** para controlar quantas referências ficam ativas.
+- **Flux Load References**: concentra `CLIPTextEncode` + `FluxGuidance` + encadeamento de referências (`LoadImage` -> `VAEEncode` -> `ReferenceLatent`) em um único nó. Possui botões **Add Reference** e **Remove** para controlar quantas referências ficam ativas e encaminha o `vae` de entrada para a saída.
 - **Flux Sampler**: concentra o grupo de processamento (`RandomNoise`, `KSamplerSelect`, `Flux2Scheduler`, `EmptyFlux2LatentImage`, `SamplerCustomAdvanced`, `VAEDecode`) em um único nó.
 - **Load Flux.2 Models**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux2` como padrão no `Load CLIP`.
 - **Load Flux.2 Models + LoRAs**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
@@ -30,7 +30,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 3. Defina `guidance`.
 4. Clique em **Add Reference** para ativar novos campos `image_ref_N`.
 5. Selecione as imagens de referência desejadas.
-6. Use a saída `conditioning` para seguir o pipeline.
+6. Use as saídas `conditioning` e `vae` para seguir o pipeline de forma ordenada.
 
 Opcional: conecte `initial_latent` para aplicar um `ReferenceLatent` inicial antes das imagens.
 
