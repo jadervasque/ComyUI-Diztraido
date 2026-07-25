@@ -140,8 +140,8 @@ function createPreviewWidget(node, getReferenceCount) {
     container.style.gridTemplateColumns = "1fr";
     container.style.gap = "8px";
     container.style.width = "100%";
-    container.style.height = "280px";
-    container.style.maxHeight = "280px";
+    container.style.height = "26px";
+    container.style.maxHeight = "26px";
     container.style.overflowY = "auto";
     container.style.padding = "2px";
 
@@ -152,50 +152,34 @@ function createPreviewWidget(node, getReferenceCount) {
         { serialize: false, hideOnZoom: false },
     );
 
-    const layoutState = {
-        baseNodeHeight: null,
-        basePreviewHeight: null,
-        baseReferenceCount: null,
-    };
-
-    const rebaseline = () => {
-        layoutState.baseNodeHeight = Number(node?.size?.[1]) || 820;
-        layoutState.basePreviewHeight = parseInt(container.style.height || "280", 10) || 280;
-        layoutState.baseReferenceCount = clampCount(getReferenceCount?.() ?? 0);
-    };
-
-    const computePreviewHeightFromBaseline = () => {
+    const computePreviewHeight = () => {
         const nodeHeight = Number(node?.size?.[1]) || 820;
         const currentCount = clampCount(getReferenceCount?.() ?? 0);
         if (currentCount <= 0) {
             // Sem referencias: mantem apenas o texto de estado, sem bloco vazio.
             return 26;
         }
-        if (layoutState.baseNodeHeight === null) {
-            rebaseline();
-        }
 
-        const deltaHeight = nodeHeight - layoutState.baseNodeHeight;
-        const deltaReferences = currentCount - layoutState.baseReferenceCount;
-        return Math.max(160, layoutState.basePreviewHeight + deltaHeight - (deltaReferences * 28));
+        const fixedContentHeight = 265 + (currentCount * 28);
+        return Math.max(160, nodeHeight - fixedContentHeight);
     };
 
     const syncLayout = () => {
-        const previewHeight = computePreviewHeightFromBaseline();
+        const previewHeight = computePreviewHeight();
         container.style.height = `${previewHeight - 10}px`;
         container.style.maxHeight = `${previewHeight - 10}px`;
+        return previewHeight;
     };
 
     widget.computeSize = (width) => {
-        const previewHeight = computePreviewHeightFromBaseline();
+        const previewHeight = computePreviewHeight();
         container.style.height = `${previewHeight - 10}px`;
         container.style.maxHeight = `${previewHeight - 10}px`;
         return [Math.max(0, width), previewHeight];
     };
 
-    rebaseline();
     syncLayout();
-    return { container, syncLayout, rebaseline };
+    return { container, syncLayout };
 }
 
 function createControls(node, countWidget, referenceWidgets, onChanged) {
@@ -301,7 +285,6 @@ app.registerExtension({
 
             const syncState = () => {
                 updateVisibleReferences(node, countWidget, referenceWidgets);
-                previewWidget.rebaseline();
                 refreshPreview();
             };
             node.__diztraidoSyncReferences = syncState;
@@ -311,7 +294,6 @@ app.registerExtension({
                 const callbackResult = originalCallback?.apply(this, arguments);
                 countWidget.value = clampCount(value ?? countWidget.value);
                 updateVisibleReferences(node, countWidget, referenceWidgets);
-                previewWidget.rebaseline();
                 refreshPreview();
                 return callbackResult;
             };
@@ -338,7 +320,6 @@ app.registerExtension({
             // Evita faixa vazia inicial: o no nasce com altura real dos widgets.
             defer(() => {
                 fitNodeToContent(node, 540);
-                previewWidget.rebaseline();
                 refreshPreview();
             }, 2);
 
@@ -346,7 +327,7 @@ app.registerExtension({
             node.onResize = function () {
                 const resizeResult = originalOnResize?.apply(this, arguments);
                 previewWidget.syncLayout();
-                refreshPreview();
+                disableNativePreview(node);
                 return resizeResult;
             };
 
