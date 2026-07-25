@@ -8,4 +8,5 @@
 - Não versione artefatos gerados, caches, ambientes virtuais ou arquivos temporários.
 - Para novas funcionalidades e correções, adicione ou atualize testes em tests/.
 - Antes de finalizar, execute os testes relevantes e valide a compatibilidade com o carregamento do ComfyUI.
+- Ao iniciar uma instância do ComfyUI para testes, use uma porta alternativa e preserve a porta padrão 8188 para a sessão principal do usuário.
 - Documente no README.md novos nós, alterações relevantes e o processo de extensão do projeto.
