@@ -167,6 +167,10 @@ function createPreviewWidget(node, getReferenceCount) {
     const computePreviewHeightFromBaseline = () => {
         const nodeHeight = Number(node?.size?.[1]) || 820;
         const currentCount = clampCount(getReferenceCount?.() ?? 0);
+        if (currentCount <= 0) {
+            // Sem referencias: mantem apenas o texto de estado, sem bloco vazio.
+            return 26;
+        }
         if (layoutState.baseNodeHeight === null) {
             rebaseline();
         }
@@ -200,6 +204,7 @@ function createControls(node, countWidget, referenceWidgets, onChanged) {
     controls.style.gap = "6px";
     controls.style.width = "100%";
     controls.style.height = "28px";
+    controls.style.paddingBottom = "8px";
 
     const addButton = document.createElement("button");
     addButton.type = "button";
@@ -238,7 +243,7 @@ function createControls(node, countWidget, referenceWidgets, onChanged) {
         controls,
         { serialize: false, hideOnZoom: false },
     );
-    domWidget.computeSize = () => [0, 32];
+    domWidget.computeSize = () => [0, 40];
 }
 
 function fitNodeToContent(node, minWidth = 540) {
@@ -306,6 +311,7 @@ app.registerExtension({
                 const callbackResult = originalCallback?.apply(this, arguments);
                 countWidget.value = clampCount(value ?? countWidget.value);
                 updateVisibleReferences(node, countWidget, referenceWidgets);
+                previewWidget.rebaseline();
                 refreshPreview();
                 return callbackResult;
             };
