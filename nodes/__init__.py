@@ -7,6 +7,7 @@ from .reference_chain import DiztraidoReferenceChain
 from .processing_bundle import DiztraidoProcessingBundle
 from .load_flux2_models import DiztraidoLoadFlux2Models
 from .load_flux1_models import DiztraidoLoadFlux1Models
+from .load_flux2_models_loras import DiztraidoLoadFlux2ModelsLoras
 
 NODE_CLASS_MAPPINGS = {
     "DiztraidoMetadataReader": DiztraidoMetadataReader,
@@ -16,6 +17,7 @@ NODE_CLASS_MAPPINGS = {
     "DiztraidoProcessingBundle": DiztraidoProcessingBundle,
     "DiztraidoLoadFlux2Models": DiztraidoLoadFlux2Models,
     "DiztraidoLoadFlux1Models": DiztraidoLoadFlux1Models,
+    "DiztraidoLoadFlux2ModelsLoras": DiztraidoLoadFlux2ModelsLoras,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -26,6 +28,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DiztraidoProcessingBundle": "Flux Sampler",
     "DiztraidoLoadFlux2Models": "Load Flux.2 Models",
     "DiztraidoLoadFlux1Models": "Load Flux.1 Models",
+    "DiztraidoLoadFlux2ModelsLoras": "Load Flux.2 Models + LoRAs",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

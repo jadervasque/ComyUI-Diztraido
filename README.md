@@ -18,6 +18,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 - **Flux Load References**: concentra `CLIPTextEncode` + `FluxGuidance` + encadeamento de referências (`LoadImage` -> `VAEEncode` -> `ReferenceLatent`) em um único nó. Possui botões **Add Reference** e **Remove** para controlar quantas referências ficam ativas.
 - **Flux Sampler**: concentra o grupo de processamento (`RandomNoise`, `KSamplerSelect`, `Flux2Scheduler`, `EmptyFlux2LatentImage`, `SamplerCustomAdvanced`, `VAEDecode`) em um único nó.
 - **Load Flux.2 Models**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux2` como padrão no `Load CLIP`.
+- **Load Flux.2 Models + LoRAs**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
 - **Load Flux.1 Models**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux` como padrão no `DualCLIPLoader`.
 
 ## Uso dos nós compostos
@@ -45,6 +46,15 @@ Opcional: conecte `initial_latent` para aplicar um `ReferenceLatent` inicial ant
 2. Configure os campos de `Load CLIP` (com `type=flux2` por padrão).
 3. Configure o `Load VAE`.
 4. Use as saídas `model`, `clip` e `vae` no workflow.
+
+### Load Flux.2 Models + LoRAs
+
+1. Configure os campos de `Load Diffusion Model`.
+2. Configure os campos de `Load CLIP` (com `type=flux2` por padrão).
+3. Configure o `Load VAE`.
+4. Clique em **Add LoRA** para ativar campos de LoRA.
+5. Para cada LoRA, selecione o arquivo e ajuste `strength_model` e `strength_clip`.
+6. Use as saídas `model`, `clip` e `vae` no workflow.
 
 ### Load Flux.1 Models
 

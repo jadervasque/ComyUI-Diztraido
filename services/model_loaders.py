@@ -6,6 +6,8 @@ import copy
 import inspect
 from typing import Any, Callable
 
+MAX_LORAS = 16
+
 
 def _default_node_factory(node_name: str) -> Any:
     import nodes as comfy_nodes
@@ -35,6 +37,13 @@ def call_node(node: Any, **kwargs: Any) -> Any:
 
     method = getattr(node, function_name)
     signature = inspect.signature(method)
+
+    if any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    ):
+        return method(**kwargs)
+
     accepted = {
         name: value
         for name, value in kwargs.items()
@@ -102,6 +111,35 @@ def build_flux2_loader_schema(
     return required, sections
 
 
+def build_flux2_lora_loader_schema(
+    resolver: Callable[[str], Any] | None = None,
+    lora_options: tuple[list[str], dict[str, Any]] | None = None,
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
+    """Monta schema Flux.2 com campos dinamicos predefinidos para LoRAs."""
+    required, sections = build_flux2_loader_schema(resolver)
+    lora_select = lora_options or _required_inputs_for("LoraLoader", resolver)["lora_name"]
+    lora_choices = list(lora_select[0]) if isinstance(lora_select, tuple) else []
+    if "" not in lora_choices:
+        lora_choices = [""] + lora_choices
+    lora_select = (lora_choices, copy.deepcopy(lora_select[1]) if isinstance(lora_select, tuple) and len(lora_select) > 1 else {})
+
+    required["__sep_vae_lora"] = ("STRING", {"default": "", "multiline": False})
+    required["lora_count"] = ("INT", {"default": 0, "min": 0, "max": MAX_LORAS})
+
+    lora_keys: list[str] = []
+    for index in range(1, MAX_LORAS + 1):
+        lora_name = f"lora_{index}"
+        strength_model = f"strength_model_{index}"
+        strength_clip = f"strength_clip_{index}"
+        required[lora_name] = lora_select
+        required[strength_model] = ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01})
+        required[strength_clip] = ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01})
+        lora_keys.extend([lora_name, strength_model, strength_clip])
+
+    sections["loras"] = lora_keys
+    return required, sections
+
+
 def build_flux1_loader_schema(
     resolver: Callable[[str], Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, list[str]]]:
@@ -147,6 +185,54 @@ def load_flux2_models(
     model = extract_result(call_node(unet_loader, **_pick_values(sections["model"], kwargs)))
     clip = extract_result(call_node(clip_loader, **_pick_values(sections["clip"], kwargs)))
     vae = extract_result(call_node(vae_loader, **_pick_values(sections["vae"], kwargs)))
+    return model, clip, vae
+
+
+def _active_lora_values(values: dict[str, Any]) -> list[dict[str, Any]]:
+    try:
+        count = int(values.get("lora_count", 0))
+    except (TypeError, ValueError):
+        count = 0
+    count = max(0, min(count, MAX_LORAS))
+
+    loras: list[dict[str, Any]] = []
+    for index in range(1, count + 1):
+        lora_name = values.get(f"lora_{index}")
+        if not isinstance(lora_name, str) or not lora_name.strip():
+            continue
+        strength_model = float(values.get(f"strength_model_{index}", 1.0))
+        strength_clip = float(values.get(f"strength_clip_{index}", strength_model))
+        if strength_model == 0 and strength_clip == 0:
+            continue
+        loras.append({
+            "lora_name": lora_name.strip(),
+            "strength_model": strength_model,
+            "strength_clip": strength_clip,
+        })
+    return loras
+
+
+def load_flux2_models_with_loras(
+    *,
+    node_factory: Callable[[str], Any] | None = None,
+    resolver: Callable[[str], Any] | None = None,
+    **kwargs: Any,
+) -> tuple[Any, Any, Any]:
+    """Carrega modelos Flux.2 e aplica LoRAs sequencialmente em MODEL/CLIP."""
+    factory = node_factory or _default_node_factory
+    model, clip, vae = load_flux2_models(node_factory=factory, resolver=resolver, **kwargs)
+    lora_loader = factory("LoraLoader")
+
+    for lora_values in _active_lora_values(kwargs):
+        loaded = call_node(
+            lora_loader,
+            model=model,
+            clip=clip,
+            **lora_values,
+        )
+        model = extract_result(loaded, 0)
+        clip = extract_result(loaded, 1)
+
     return model, clip, vae
 
 
