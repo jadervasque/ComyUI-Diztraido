@@ -152,29 +152,51 @@ function createPreviewWidget(node, getReferenceCount) {
         { serialize: false, hideOnZoom: false },
     );
 
-    const computePreviewHeight = () => {
-        const nodeHeight = Number(node?.size?.[1]) || 820;
-        const currentCount = clampCount(getReferenceCount?.() ?? 0);
-        if (currentCount <= 0) {
-            // Sem referencias: mantem apenas o texto de estado, sem bloco vazio.
-            return 26;
-        }
-
-        const fixedContentHeight = 265 + (currentCount * 28);
-        return Math.max(160, nodeHeight - fixedContentHeight);
+    const layoutState = {
+        previewHeight: 26,
+        expandedPreviewHeight: 180,
+        lastNodeHeight: Number(node?.size?.[1]) || null,
+        lastReferenceCount: clampCount(getReferenceCount?.() ?? 0),
     };
 
-    const syncLayout = () => {
-        const previewHeight = computePreviewHeight();
+    const setPreviewHeight = (height) => {
+        const previewHeight = Math.max(26, Math.round(height));
+        layoutState.previewHeight = previewHeight;
         container.style.height = `${previewHeight - 10}px`;
         container.style.maxHeight = `${previewHeight - 10}px`;
         return previewHeight;
     };
 
+    const syncLayout = ({ fromResize = false } = {}) => {
+        const currentCount = clampCount(getReferenceCount?.() ?? 0);
+        const nodeHeight = Number(node?.size?.[1]) || layoutState.lastNodeHeight;
+
+        if (fromResize && nodeHeight && layoutState.lastNodeHeight && currentCount > 0) {
+            const deltaHeight = nodeHeight - layoutState.lastNodeHeight;
+            if (deltaHeight) {
+                layoutState.expandedPreviewHeight = Math.max(160, layoutState.expandedPreviewHeight + deltaHeight);
+            }
+        }
+
+        if (currentCount <= 0) {
+            setPreviewHeight(26);
+        } else if (layoutState.lastReferenceCount <= 0) {
+            setPreviewHeight(layoutState.expandedPreviewHeight);
+        } else {
+            setPreviewHeight(layoutState.previewHeight || layoutState.expandedPreviewHeight);
+        }
+
+        if (currentCount > 0) {
+            layoutState.expandedPreviewHeight = Math.max(160, layoutState.previewHeight);
+        }
+
+        layoutState.lastReferenceCount = currentCount;
+        layoutState.lastNodeHeight = nodeHeight;
+        return layoutState.previewHeight;
+    };
+
     widget.computeSize = (width) => {
-        const previewHeight = computePreviewHeight();
-        container.style.height = `${previewHeight - 10}px`;
-        container.style.maxHeight = `${previewHeight - 10}px`;
+        const previewHeight = syncLayout();
         return [Math.max(0, width), previewHeight];
     };
 
@@ -187,7 +209,8 @@ function createControls(node, countWidget, referenceWidgets, onChanged) {
     controls.style.display = "flex";
     controls.style.gap = "6px";
     controls.style.width = "100%";
-    controls.style.height = "28px";
+    controls.style.height = "100%";
+    controls.style.boxSizing = "border-box";
     controls.style.paddingBottom = "8px";
 
     const addButton = document.createElement("button");
@@ -326,7 +349,7 @@ app.registerExtension({
             const originalOnResize = node.onResize;
             node.onResize = function () {
                 const resizeResult = originalOnResize?.apply(this, arguments);
-                previewWidget.syncLayout();
+                previewWidget.syncLayout({ fromResize: true });
                 disableNativePreview(node);
                 return resizeResult;
             };
