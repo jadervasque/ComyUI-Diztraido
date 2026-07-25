@@ -152,19 +152,26 @@ function createPreviewWidget(node, getReferenceCount) {
     container.style.overflowY = "auto";
     container.style.padding = "2px";
 
+    const layoutState = {
+        previewHeight: 26,
+        expandedPreviewHeight: 180,
+        resizedWhileCollapsed: false,
+        lastNodeHeight: Number(node?.size?.[1]) || null,
+        lastReferenceCount: clampCount(getReferenceCount?.() ?? 0),
+    };
+
     const widget = node.addDOMWidget(
         "references_preview",
         "diztraido-reference-preview",
         container,
-        { serialize: false, hideOnZoom: false },
+        {
+            serialize: false,
+            hideOnZoom: false,
+            getMinHeight: () => layoutState.previewHeight,
+            getMaxHeight: () => layoutState.previewHeight,
+            getHeight: () => layoutState.previewHeight,
+        },
     );
-
-    const layoutState = {
-        previewHeight: 26,
-        expandedPreviewHeight: 180,
-        lastNodeHeight: Number(node?.size?.[1]) || null,
-        lastReferenceCount: clampCount(getReferenceCount?.() ?? 0),
-    };
 
     const setPreviewHeight = (height) => {
         const previewHeight = Math.max(26, Math.round(height));
@@ -181,7 +188,17 @@ function createPreviewWidget(node, getReferenceCount) {
         if (fromResize && nodeHeight && layoutState.lastNodeHeight && currentCount > 0) {
             const deltaHeight = nodeHeight - layoutState.lastNodeHeight;
             if (deltaHeight) {
-                layoutState.expandedPreviewHeight = Math.max(160, layoutState.expandedPreviewHeight + deltaHeight);
+                setPreviewHeight(layoutState.previewHeight + deltaHeight);
+                layoutState.expandedPreviewHeight = Math.max(160, layoutState.previewHeight);
+            }
+        } else if (fromResize && nodeHeight && layoutState.lastNodeHeight) {
+            const deltaHeight = nodeHeight - layoutState.lastNodeHeight;
+            if (deltaHeight) {
+                const baseHeight = layoutState.resizedWhileCollapsed
+                    ? layoutState.expandedPreviewHeight
+                    : layoutState.previewHeight;
+                layoutState.expandedPreviewHeight = Math.max(180, baseHeight + deltaHeight);
+                layoutState.resizedWhileCollapsed = true;
             }
         }
 
@@ -189,7 +206,7 @@ function createPreviewWidget(node, getReferenceCount) {
             setPreviewHeight(26);
         } else if (layoutState.lastReferenceCount <= 0) {
             setPreviewHeight(layoutState.expandedPreviewHeight);
-        } else {
+        } else if (!fromResize) {
             setPreviewHeight(layoutState.previewHeight || layoutState.expandedPreviewHeight);
         }
 
@@ -212,50 +229,17 @@ function createPreviewWidget(node, getReferenceCount) {
 }
 
 function createControls(node, countWidget, onChanged) {
-    const controls = document.createElement("div");
-    controls.style.display = "flex";
-    controls.style.gap = "6px";
-    controls.style.width = "100%";
-    controls.style.height = "100%";
-    controls.style.boxSizing = "border-box";
-    controls.style.paddingBottom = "8px";
-
-    const addButton = document.createElement("button");
-    addButton.type = "button";
-    addButton.textContent = "Add Reference";
-    addButton.style.flex = "1";
-
-    const removeButton = document.createElement("button");
-    removeButton.type = "button";
-    removeButton.textContent = "Remove";
-    removeButton.style.flex = "1";
-
-    const stopPointer = (event) => event.stopPropagation();
-    addButton.addEventListener("pointerdown", stopPointer);
-    removeButton.addEventListener("pointerdown", stopPointer);
-
-    addButton.addEventListener("click", (event) => {
-        event.preventDefault();
+    const addButton = node.addWidget("button", "Add Reference", null, () => {
         countWidget.value = clampCount((countWidget.value ?? 0) + 1);
         onChanged?.();
     });
+    addButton.options = { ...(addButton.options ?? {}), serialize: false };
 
-    removeButton.addEventListener("click", (event) => {
-        event.preventDefault();
+    const removeButton = node.addWidget("button", "Remove", null, () => {
         countWidget.value = clampCount((countWidget.value ?? 0) - 1);
         onChanged?.();
     });
-
-    controls.appendChild(addButton);
-    controls.appendChild(removeButton);
-
-    const domWidget = node.addDOMWidget(
-        "references_controls",
-        "diztraido-reference-controls",
-        controls,
-        { serialize: false, hideOnZoom: false },
-    );
-    domWidget.computeSize = () => [0, 40];
+    removeButton.options = { ...(removeButton.options ?? {}), serialize: false };
 }
 
 function fitNodeToContent(node, minWidth = 540) {

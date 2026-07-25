@@ -118,37 +118,13 @@ function updateVisibleLoras(node, countWidget, groups, layout, mode = "preserve"
 }
 
 function createLoraControls(node, countWidget, groups, layout) {
-    const controls = document.createElement("div");
-    Object.assign(controls.style, {
-        display: "flex",
-        gap: "6px",
-        width: "100%",
-        height: "100%",
-        boxSizing: "border-box",
-        paddingBottom: "8px",
-    });
-
     for (const [label, delta] of [["Add LoRA", 1], ["Remove", -1]]) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = label;
-        button.style.flex = "1";
-        button.addEventListener("pointerdown", (event) => event.stopPropagation());
-        button.addEventListener("click", (event) => {
-            event.preventDefault();
+        const button = node.addWidget("button", label, null, () => {
             countWidget.value = clampCount((countWidget.value ?? 0) + delta);
             updateVisibleLoras(node, countWidget, groups, layout);
         });
-        controls.appendChild(button);
+        button.options = { ...(button.options ?? {}), serialize: false };
     }
-
-    const widget = node.addDOMWidget(
-        "lora_controls",
-        "diztraido-lora-controls",
-        controls,
-        { serialize: false, hideOnZoom: false },
-    );
-    widget.computeSize = () => [0, 40];
 }
 
 function applyLoraControls(node) {
