@@ -48,6 +48,15 @@ def call_node(node: Any, **kwargs: Any) -> Any:
 
     method = getattr(node, function_name)
     signature = inspect.signature(method)
+
+    # Alguns nos do ComfyUI expoem wrappers com assinatura (*args, **kwargs).
+    # Nesses casos, filtrar por nomes remove todos os argumentos obrigatorios.
+    if any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in signature.parameters.values()
+    ):
+        return method(**kwargs)
+
     accepted = {
         name: value
         for name, value in kwargs.items()

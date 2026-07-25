@@ -55,6 +55,25 @@ def _factory(name):
     }[name]()
 
 
+class _FluxGuidanceVarKwNode:
+    FUNCTION = "execute"
+
+    def execute(self, *args, **kwargs):
+        conditioning = kwargs["conditioning"]
+        guidance = kwargs["guidance"]
+        return (f"g({conditioning},{guidance})",)
+
+
+def _factory_varkw(name):
+    return {
+        "CLIPTextEncode": _ClipTextEncodeNode,
+        "FluxGuidance": _FluxGuidanceVarKwNode,
+        "ReferenceLatent": _ReferenceLatentNode,
+        "LoadImage": _LoadImageNode,
+        "VAEEncode": _VAEEncodeNode,
+    }[name]()
+
+
 class ComposedReferencesTests(unittest.TestCase):
     def test_builds_conditioning_from_clip_and_prompt(self):
         result = build_reference_conditioning_from_prompt(
@@ -74,6 +93,16 @@ class ComposedReferencesTests(unittest.TestCase):
             guidance=4,
             reference_count=0,
             node_factory=_factory,
+        )
+        self.assertEqual(result, "g(c0,4.0)")
+
+    def test_supports_nodes_wrapped_with_variadic_kwargs_signature(self):
+        result = build_reference_conditioning(
+            conditioning="c0",
+            vae="vae0",
+            guidance=4,
+            reference_count=0,
+            node_factory=_factory_varkw,
         )
         self.assertEqual(result, "g(c0,4.0)")
 
