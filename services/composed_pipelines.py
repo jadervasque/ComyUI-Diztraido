@@ -32,6 +32,42 @@ def extract_result(value: Any, index: int = 0) -> Any:
     return value
 
 
+def is_conditioning_list(value: Any) -> bool:
+    """Detecta estrutura de CONDITIONING esperada pelo ComfyUI."""
+    if not isinstance(value, list):
+        return False
+    if not value:
+        return True
+    for item in value:
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            return False
+        if not isinstance(item[1], dict):
+            return False
+    return True
+
+
+def normalize_conditioning(value: Any) -> Any:
+    """Normaliza condicionamento para evitar listas aninhadas de um unico output."""
+    if isinstance(value, dict) and "result" in value:
+        value = value["result"]
+
+    if isinstance(value, tuple) and len(value) == 1 and is_conditioning_list(value[0]):
+        return value[0]
+
+    if is_conditioning_list(value):
+        return value
+
+    if (
+        isinstance(value, list)
+        and len(value) == 1
+        and isinstance(value[0], list)
+        and is_conditioning_list(value[0])
+    ):
+        return value[0]
+
+    return value
+
+
 def _default_node_factory(node_name: str) -> Any:
     """Resolve classes de nos nativos a partir do registro global do ComfyUI."""
     import nodes as comfy_nodes
@@ -92,10 +128,13 @@ def build_reference_conditioning(
     """Aplica guidance e encadeia multiplos ReferenceLatent a partir de imagens."""
     factory = node_factory or _default_node_factory
 
+    conditioning = normalize_conditioning(conditioning)
+
     flux_guidance = factory("FluxGuidance")
     current_conditioning = extract_result(
         call_node(flux_guidance, conditioning=conditioning, guidance=float(guidance)),
     )
+    current_conditioning = normalize_conditioning(current_conditioning)
 
     reference_latent = factory("ReferenceLatent")
     if initial_latent is not None:
@@ -106,6 +145,7 @@ def build_reference_conditioning(
                 latent=initial_latent,
             ),
         )
+        current_conditioning = normalize_conditioning(current_conditioning)
 
     images = collect_reference_images(reference_count, kwargs)
     if not images:
@@ -122,6 +162,7 @@ def build_reference_conditioning(
         current_conditioning = extract_result(
             call_node(reference_latent, conditioning=current_conditioning, latent=latent),
         )
+        current_conditioning = normalize_conditioning(current_conditioning)
 
     return current_conditioning
 
@@ -195,6 +236,7 @@ def run_processing_pipeline(
     """Replica o grupo PROCESSAMENTO em um unico ponto de execucao."""
     factory = node_factory or _default_node_factory
     params = normalize_processing_params(noise_seed, sampler_name, steps, width, height, batch_size)
+    conditioning = normalize_conditioning(conditioning)
 
     random_noise = factory("RandomNoise")
     basic_guider = factory("BasicGuider")

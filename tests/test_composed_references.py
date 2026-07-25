@@ -7,6 +7,7 @@ import unittest
 from services.composed_pipelines import (
     build_reference_conditioning,
     build_reference_conditioning_from_prompt,
+    normalize_conditioning,
 )
 
 
@@ -75,6 +76,11 @@ def _factory_varkw(name):
 
 
 class ComposedReferencesTests(unittest.TestCase):
+    def test_normalize_conditioning_unwraps_single_nested_list(self):
+        conditioning = [["embed", {"k": 1}]]
+        nested = [conditioning]
+        self.assertEqual(normalize_conditioning(nested), conditioning)
+
     def test_builds_conditioning_from_clip_and_prompt(self):
         result = build_reference_conditioning_from_prompt(
             clip="clip0",
@@ -105,6 +111,17 @@ class ComposedReferencesTests(unittest.TestCase):
             node_factory=_factory_varkw,
         )
         self.assertEqual(result, "g(c0,4.0)")
+
+    def test_accepts_nested_conditioning_when_no_references(self):
+        nested_conditioning = [["embed", {"p": 1}]]
+        result = build_reference_conditioning(
+            conditioning=[nested_conditioning],
+            vae="vae0",
+            guidance=4,
+            reference_count=0,
+            node_factory=_factory,
+        )
+        self.assertEqual(result, "g([['embed', {'p': 1}]],4.0)")
 
     def test_chains_initial_latent_and_all_active_references(self):
         result = build_reference_conditioning(
