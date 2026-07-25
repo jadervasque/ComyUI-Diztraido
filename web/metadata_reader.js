@@ -137,7 +137,7 @@ function createNavigationWidget(node, onNavigate) {
         width: "100%",
     });
 
-    for (const [label, direction] of [["Anterior", -1], ["Próximo", 1]]) {
+    for (const [label, direction] of [["Previous", -1], ["Next", 1]]) {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = label;
