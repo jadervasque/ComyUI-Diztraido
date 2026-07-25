@@ -46,7 +46,9 @@ def call_node(node: Any, **kwargs: Any) -> Any:
 def extract_result(value: Any, index: int = 0) -> Any:
     if isinstance(value, dict) and "result" in value:
         value = value["result"]
-    if isinstance(value, (tuple, list)):
+
+    # Mesma regra dos pipelines: apenas tuple representa envelope de outputs.
+    if isinstance(value, tuple):
         return value[index]
     return value
 

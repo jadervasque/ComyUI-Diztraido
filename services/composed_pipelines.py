@@ -24,7 +24,10 @@ def extract_result(value: Any, index: int = 0) -> Any:
     """Extrai a saida principal de retornos tuple/list/dict dos nos."""
     if isinstance(value, dict) and "result" in value:
         value = value["result"]
-    if isinstance(value, (tuple, list)):
+
+    # Outputs do ComfyUI costumam vir em tuple; ja tipos de dados validos,
+    # como CONDITIONING, podem ser list e nao devem ser truncados.
+    if isinstance(value, tuple):
         return value[index]
     return value
 

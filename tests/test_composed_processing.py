@@ -21,6 +21,17 @@ class _BasicGuiderNode:
         return (f"guider({model}|{conditioning})",)
 
 
+class _BasicGuiderListAwareNode:
+    FUNCTION = "build"
+
+    def build(self, model, conditioning):
+        if not isinstance(conditioning, list):
+            raise AssertionError("conditioning deveria permanecer lista")
+        if len(conditioning) < 2 or len(conditioning[0]) != 2:
+            raise AssertionError("conditioning foi truncado ou corrompido")
+        return ("guider-ok",)
+
+
 class _KSamplerSelectNode:
     FUNCTION = "pick"
 
@@ -68,6 +79,18 @@ def _factory(name):
     }[name]()
 
 
+def _factory_list_aware(name):
+    return {
+        "RandomNoise": _RandomNoiseNode,
+        "BasicGuider": _BasicGuiderListAwareNode,
+        "KSamplerSelect": _KSamplerSelectNode,
+        "Flux2Scheduler": _Flux2SchedulerNode,
+        "EmptyFlux2LatentImage": _EmptyLatentNode,
+        "SamplerCustomAdvanced": _SamplerAdvancedNode,
+        "VAEDecode": _VAEDecodeNode,
+    }[name]()
+
+
 class ComposedProcessingTests(unittest.TestCase):
     def test_normalizes_params(self):
         params = normalize_processing_params(
@@ -102,6 +125,25 @@ class ComposedProcessingTests(unittest.TestCase):
         self.assertEqual(
             image,
             "image(sampled(noise(42)|guider(m0|c0)|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
+        )
+
+    def test_preserves_conditioning_list_structure_for_basic_guider(self):
+        conditioning = [["embed", {"a": 1}], ["embed2", {"b": 2}]]
+        image = run_processing_pipeline(
+            model="m0",
+            conditioning=conditioning,
+            vae="v0",
+            noise_seed=42,
+            sampler_name="euler",
+            steps=20,
+            width=1024,
+            height=768,
+            batch_size=1,
+            node_factory=_factory_list_aware,
+        )
+        self.assertEqual(
+            image,
+            "image(sampled(noise(42)|guider-ok|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
         )
 
 
