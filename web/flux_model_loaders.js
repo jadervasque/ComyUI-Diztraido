@@ -15,10 +15,31 @@ function setWidgetVisibility(widget, visible) {
     if (!widget) {
         return;
     }
+
+    if (!Object.prototype.hasOwnProperty.call(widget, "__diztraidoOriginalComputeSize")) {
+        widget.__diztraidoOriginalComputeSize = widget.computeSize;
+    }
+
     widget.hidden = !visible;
+    widget.computeSize = visible
+        ? widget.__diztraidoOriginalComputeSize
+        : () => [0, -4];
+
     if (widget.inputEl) {
         widget.inputEl.style.display = visible ? "" : "none";
     }
+}
+
+function fitNodeToContent(node) {
+    if (!node || typeof node.computeSize !== "function" || typeof node.setSize !== "function") {
+        return;
+    }
+
+    const computed = node.computeSize();
+    const currentWidth = Number(node.size?.[0]) || 0;
+    const computedWidth = Number(computed?.[0]) || currentWidth;
+    const computedHeight = Math.max(0, Number(computed?.[1]) || 0);
+    node.setSize([Math.max(currentWidth, computedWidth), computedHeight]);
 }
 
 function getLoraWidgetGroups(node) {
@@ -44,6 +65,9 @@ function updateVisibleLoras(node, countWidget, groups) {
             setWidgetVisibility(widget, index < count);
         }
     });
+
+    fitNodeToContent(node);
+    requestAnimationFrame(() => fitNodeToContent(node));
     node.setDirtyCanvas(true, true);
 }
 
