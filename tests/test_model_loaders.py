@@ -5,10 +5,12 @@ from __future__ import annotations
 import unittest
 
 from services.model_loaders import (
+    build_flux1_lora_loader_schema,
     build_flux1_loader_schema,
     build_flux2_lora_loader_schema,
     build_flux2_loader_schema,
     load_flux1_models,
+    load_flux1_models_with_loras,
     load_flux2_models,
     load_flux2_models_with_loras,
 )
@@ -204,6 +206,37 @@ class ModelLoadersTests(unittest.TestCase):
         )
         self.assertEqual(model, "model(u1|default)")
         self.assertEqual(clip, "clip2(a|b|flux)")
+        self.assertEqual(vae, "vae(v1)")
+
+    def test_flux1_lora_schema_adds_lora_fields_and_keeps_flux1_clip_default(self):
+        required, sections = build_flux1_lora_loader_schema(_resolver)
+        self.assertEqual(required["type"][1]["default"], "flux")
+        self.assertEqual(required["lora_count"][1]["default"], 0)
+        self.assertIn("lora_1", required)
+        self.assertIn("strength_model_1", required)
+        self.assertIn("strength_clip_1", required)
+        self.assertIn("lora_1", sections["loras"])
+
+    def test_flux1_lora_loader_applies_active_loras_in_order(self):
+        model, clip, vae = load_flux1_models_with_loras(
+            node_factory=_factory,
+            resolver=_resolver,
+            unet_name="u1",
+            weight_dtype="default",
+            clip_name1="a",
+            clip_name2="b",
+            type="flux",
+            vae_name="v1",
+            lora_count=2,
+            lora_1="lora-a.safetensors",
+            strength_model_1=0.8,
+            strength_clip_1=0.7,
+            lora_2="lora-b.safetensors",
+            strength_model_2=0.5,
+            strength_clip_2=0.25,
+        )
+        self.assertEqual(model, "model(u1|default)->lora(lora-a.safetensors|0.8)->lora(lora-b.safetensors|0.5)")
+        self.assertEqual(clip, "clip2(a|b|flux)->lora(lora-a.safetensors|0.7)->lora(lora-b.safetensors|0.25)")
         self.assertEqual(vae, "vae(v1)")
 
 
