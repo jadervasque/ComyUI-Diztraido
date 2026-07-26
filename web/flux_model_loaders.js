@@ -100,8 +100,21 @@ function updateVisibleLoras(node, countWidget, groups, layout, mode = "preserve"
     }
 
     groups.forEach((group, index) => {
+        const visible = index < count;
+        if (!visible) {
+            const [loraWidget, strengthModelWidget, strengthClipWidget] = group;
+            if (loraWidget) {
+                loraWidget.value = "";
+            }
+            if (strengthModelWidget) {
+                strengthModelWidget.value = 1.0;
+            }
+            if (strengthClipWidget) {
+                strengthClipWidget.value = 1.0;
+            }
+        }
         for (const widget of group) {
-            setWidgetVisibility(widget, index < count);
+            setWidgetVisibility(widget, visible);
         }
     });
 

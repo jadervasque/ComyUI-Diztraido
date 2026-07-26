@@ -50,11 +50,21 @@ class DiztraidoStringFormat:
                     "INT",
                     {"default": 2, "min": 0, "max": MAX_INPUTS, "step": 1},
                 ),
+                "single_line_output": (
+                    "BOOLEAN",
+                    {"default": False, "label_on": "enabled", "label_off": "disabled"},
+                ),
             },
             "optional": optional,
         }
 
-    def build_string(self, template: str, input_count: int, **kwargs: Any):
+    def build_string(
+        self,
+        template: str,
+        input_count: int,
+        single_line_output: bool = False,
+        **kwargs: Any,
+    ):
         count = max(0, min(int(input_count), MAX_INPUTS))
         values = [kwargs.get(f"input_{index}") for index in range(1, count + 1)]
-        return (format_string(template, values),)
+        return (format_string(template, values, single_line_output),)

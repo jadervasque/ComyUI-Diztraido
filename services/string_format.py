@@ -48,11 +48,12 @@ def _value_at(index: int, values: list[Any]) -> Any:
 
 
 def _remove_commented_lines(template: str) -> str:
-    return "".join(
+    uncommented = "".join(
         line
         for line in template.splitlines(keepends=True)
         if not line.lstrip(" \t").startswith("#")
     )
+    return uncommented.strip("\r\n")
 
 
 def _tokenize_condition(expression: str, values: list[Any]) -> list[_Token]:
@@ -303,8 +304,15 @@ def _render_template(template: str, values: list[Any]) -> str:
     return rendered.replace(left_brace, "{").replace(right_brace, "}")
 
 
-def format_string(template: str, values: list[Any]) -> str:
+def format_string(
+    template: str,
+    values: list[Any],
+    single_line_output: bool = False,
+) -> str:
     """Renderiza placeholders 1-based e expressoes ternarias booleanas."""
     if not isinstance(template, str):
         raise StringFormatError("O template deve ser uma string.")
-    return _render_template(_remove_commented_lines(template), values)
+    rendered = _render_template(_remove_commented_lines(template), values)
+    if single_line_output:
+        rendered = re.sub(r"[ \t]*(?:\r\n?|\n)+[ \t]*", " ", rendered)
+    return rendered

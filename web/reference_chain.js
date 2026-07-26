@@ -69,7 +69,11 @@ function updateVisibleReferences(node, countWidget, referenceWidgets) {
     }
 
     referenceWidgets.forEach((widget, index) => {
-        setWidgetVisibility(widget, index < count);
+        const visible = index < count;
+        if (!visible && widget) {
+            widget.value = "";
+        }
+        setWidgetVisibility(widget, visible);
     });
 
     disableNativePreview(node);
