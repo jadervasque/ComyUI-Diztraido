@@ -115,6 +115,15 @@ def build_flux2_lora_loader_schema(
 ) -> tuple[dict[str, Any], dict[str, list[str]]]:
     """Monta schema Flux.2 com campos dinamicos predefinidos para LoRAs."""
     required, sections = build_flux2_loader_schema(resolver)
+    return _add_lora_inputs(required, sections, resolver, lora_options)
+
+
+def _add_lora_inputs(
+    required: dict[str, Any],
+    sections: dict[str, list[str]],
+    resolver: Callable[[str], Any] | None = None,
+    lora_options: tuple[list[str], dict[str, Any]] | None = None,
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
     lora_select = lora_options or _required_inputs_for("LoraLoader", resolver)["lora_name"]
     lora_choices = list(lora_select[0]) if isinstance(lora_select, tuple) else []
     if "" not in lora_choices:
@@ -157,6 +166,15 @@ def build_flux1_loader_schema(
         "vae": list(vae_inputs.keys()),
     }
     return required, sections
+
+
+def build_flux1_lora_loader_schema(
+    resolver: Callable[[str], Any] | None = None,
+    lora_options: tuple[list[str], dict[str, Any]] | None = None,
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
+    """Monta schema Flux.1 com campos dinamicos predefinidos para LoRAs."""
+    required, sections = build_flux1_loader_schema(resolver)
+    return _add_lora_inputs(required, sections, resolver, lora_options)
 
 
 def _pick_values(keys: list[str], values: dict[str, Any]) -> dict[str, Any]:
@@ -248,4 +266,28 @@ def load_flux1_models(
     model = extract_result(call_node(unet_loader, **_pick_values(sections["model"], kwargs)))
     clip = extract_result(call_node(dual_clip_loader, **_pick_values(sections["clip"], kwargs)))
     vae = extract_result(call_node(vae_loader, **_pick_values(sections["vae"], kwargs)))
+    return model, clip, vae
+
+
+def load_flux1_models_with_loras(
+    *,
+    node_factory: Callable[[str], Any] | None = None,
+    resolver: Callable[[str], Any] | None = None,
+    **kwargs: Any,
+) -> tuple[Any, Any, Any]:
+    """Carrega modelos Flux.1 e aplica LoRAs sequencialmente em MODEL/CLIP."""
+    factory = node_factory or _default_node_factory
+    model, clip, vae = load_flux1_models(node_factory=factory, resolver=resolver, **kwargs)
+    lora_loader = factory("LoraLoader")
+
+    for lora_values in _active_lora_values(kwargs):
+        loaded = call_node(
+            lora_loader,
+            model=model,
+            clip=clip,
+            **lora_values,
+        )
+        model = extract_result(loaded, 0)
+        clip = extract_result(loaded, 1)
+
     return model, clip, vae

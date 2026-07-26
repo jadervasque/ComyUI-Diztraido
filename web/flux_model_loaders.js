@@ -1,6 +1,9 @@
 import { app } from "../../scripts/app.js";
 
-const LORA_NODE_CLASS = "DiztraidoLoadFlux2ModelsLoras";
+const LORA_NODE_CLASSES = new Set([
+    "DiztraidoLoadFlux1ModelsLoras",
+    "DiztraidoLoadFlux2ModelsLoras",
+]);
 const MAX_LORAS = 16;
 
 function clampCount(value) {
@@ -167,7 +170,7 @@ function applyLoraControls(node) {
 app.registerExtension({
     name: "diztraido.FluxModelLoaders",
     async beforeRegisterNodeDef(nodeType, nodeData) {
-        if (nodeData.name !== LORA_NODE_CLASS) {
+        if (!LORA_NODE_CLASSES.has(nodeData.name)) {
             return;
         }
 
