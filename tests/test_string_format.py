@@ -98,9 +98,22 @@ class StringFormatTests(unittest.TestCase):
         template = "File_{1}\n# ignored {99}\n  # also ignored\nEnd_{2}"
         self.assertEqual(format_string(template, ["A", "B"]), "File_A\nEnd_B")
 
+    def test_removes_trailing_newline_left_before_comments(self):
+        template = "{1}/C{3}/{2}\n# ignored\n# also ignored"
+        result = format_string(template, ["FLUX2-MAX/LOCAL", "1036670105091238", 6])
+        self.assertEqual(result, "FLUX2-MAX/LOCAL/C6/1036670105091238")
+
     def test_preserves_hash_outside_start_of_line(self):
         template = "Color #1\nValue_{1} # suffix"
         self.assertEqual(format_string(template, [7]), "Color #1\nValue_7 # suffix")
+
+    def test_converts_paragraphs_to_spaces_for_single_line_output(self):
+        template = "First {1}\r\n\r\n  Second\nThird {2}"
+        result = format_string(template, ["value", "line"], single_line_output=True)
+        self.assertEqual(result, "First value Second Third line")
+
+    def test_preserves_line_breaks_when_single_line_output_is_disabled(self):
+        self.assertEqual(format_string("First\nSecond", []), "First\nSecond")
 
     def test_supports_template_containing_only_comments(self):
         self.assertEqual(format_string("# first\n\t# second", []), "")
@@ -129,6 +142,8 @@ class StringFormatNodeTests(unittest.TestCase):
         self.assertEqual(len(schema["optional"]), module.MAX_INPUTS)
         self.assertEqual(str(schema["optional"]["input_1"][0]), "*")
         self.assertFalse(schema["optional"]["input_1"][0] != "BOOLEAN")
+        self.assertEqual(schema["required"]["single_line_output"][0], "BOOLEAN")
+        self.assertFalse(schema["required"]["single_line_output"][1]["default"])
 
     def test_builds_string_using_only_inputs_inside_count(self):
         module = _load_string_format_node_module()
@@ -140,6 +155,17 @@ class StringFormatNodeTests(unittest.TestCase):
             input_3="ignored",
         )
         self.assertEqual(result, ("file_10",))
+
+    def test_builds_single_line_output_when_enabled(self):
+        module = _load_string_format_node_module()
+        result = module.DiztraidoStringFormat().build_string(
+            "First {1}\n\nSecond {2}",
+            input_count=2,
+            single_line_output=True,
+            input_1="line",
+            input_2="paragraph",
+        )
+        self.assertEqual(result, ("First line Second paragraph",))
 
 
 if __name__ == "__main__":

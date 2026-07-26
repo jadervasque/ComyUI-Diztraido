@@ -69,7 +69,8 @@ Opcional: conecte `initial_latent` para aplicar um `ReferenceLatent` inicial ant
 1. Defina `input_count` para criar os sockets `input_1`, `input_2`, etc.
 2. Conecte valores `STRING`, `INT`, `FLOAT` ou `BOOLEAN`; o tipo é reconhecido automaticamente.
 3. Use `{1}`, `{2}`, etc. no campo `template` para inserir os valores pela posição.
-4. Use a saída `string` no restante do workflow.
+4. Ative `single_line_output` para substituir parágrafos e quebras de linha por espaços.
+5. Use a saída `string` no restante do workflow.
 
 Exemplos:
 
