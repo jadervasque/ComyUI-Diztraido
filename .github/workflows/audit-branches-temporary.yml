@@ -25,3 +25,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPOSITORY: ${{ github.repository }}
         run: python .github/scripts/audit_branches_temporary.py
+
+      - name: Upload branch audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-audit
+          path: branch-audit.json
+          if-no-files-found: error
+          retention-days: 1
