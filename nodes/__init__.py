@@ -9,6 +9,7 @@ from .load_flux2_models import DiztraidoLoadFlux2Models
 from .load_flux1_models import DiztraidoLoadFlux1Models
 from .load_flux1_models_loras import DiztraidoLoadFlux1ModelsLoras
 from .load_flux2_models_loras import DiztraidoLoadFlux2ModelsLoras
+from .resolution_selector import DiztraidoResolutionSelector
 from .string_format import DiztraidoStringFormat
 
 NODE_CLASS_MAPPINGS = {
@@ -21,6 +22,7 @@ NODE_CLASS_MAPPINGS = {
     "DiztraidoLoadFlux1Models": DiztraidoLoadFlux1Models,
     "DiztraidoLoadFlux1ModelsLoras": DiztraidoLoadFlux1ModelsLoras,
     "DiztraidoLoadFlux2ModelsLoras": DiztraidoLoadFlux2ModelsLoras,
+    "DiztraidoResolutionSelector": DiztraidoResolutionSelector,
     "DiztraidoStringFormat": DiztraidoStringFormat,
 }
 
@@ -34,6 +36,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DiztraidoLoadFlux1Models": "Load Flux.1 Models",
     "DiztraidoLoadFlux1ModelsLoras": "Load Flux.1 Models + LoRAs",
     "DiztraidoLoadFlux2ModelsLoras": "Load Flux.2 Models + LoRAs",
+    "DiztraidoResolutionSelector": "Resolution Selector Extended",
     "DiztraidoStringFormat": "String Format",
 }
 
