@@ -1,46 +1,48 @@
-# Código de conduta
+**Languages:** [English](CODE_OF_CONDUCT.md) · [Português (Brasil)](docs/lang/pt-BR/CODE_OF_CONDUCT.md) · [Español](docs/lang/es/CODE_OF_CONDUCT.md)
 
-## Compromisso
+# Code of Conduct
 
-Participantes e mantenedores devem contribuir para um ambiente aberto, respeitoso, colaborativo e livre de assédio. Esse compromisso vale para issues, pull requests, discussões, revisões, canais relacionados ao projeto e interações públicas realizadas em nome do projeto.
+## Commitment
 
-## Comportamentos esperados
+Participants and maintainers must contribute to an open, respectful, collaborative, and harassment-free environment. This commitment applies to issues, pull requests, discussions, reviews, project-related channels, and public interactions made on behalf of the project.
 
-- Comunicar-se de forma clara, técnica e respeitosa.
-- Criticar ideias e implementações, não pessoas.
-- Aceitar feedback fundamentado e corrigir erros de boa-fé.
-- Respeitar diferenças de experiência, identidade, origem e perspectiva.
-- Manter discussões relacionadas ao escopo do projeto.
-- Preservar informações privadas e dados sensíveis.
-- Priorizar a segurança e o bem-estar da comunidade.
+## Expected behavior
 
-## Comportamentos inaceitáveis
+- Communicate clearly, technically, and respectfully.
+- Critique ideas and implementations, not people.
+- Accept well-founded feedback and correct good-faith mistakes.
+- Respect differences in experience, identity, background, and perspective.
+- Keep discussions related to the project scope.
+- Protect private information and sensitive data.
+- Prioritize the safety and well-being of the community.
 
-- Assédio, intimidação, discriminação ou ataques pessoais.
-- Linguagem sexualizada, ameaças ou incentivo à violência.
-- Divulgação de informações privadas sem autorização.
-- Spam, provocação deliberada ou interrupção repetida de discussões.
-- Manipulação de evidências técnicas ou atribuição indevida de trabalho.
-- Uso dos canais do projeto para promover conteúdo ilegal ou malicioso.
+## Unacceptable behavior
 
-## Aplicação
+- Harassment, intimidation, discrimination, or personal attacks.
+- Sexualized language, threats, or encouragement of violence.
+- Disclosure of private information without authorization.
+- Spam, deliberate provocation, or repeated disruption of discussions.
+- Manipulation of technical evidence or improper attribution of work.
+- Use of project channels to promote illegal or malicious content.
 
-Os mantenedores podem editar ou remover conteúdo, encerrar discussões, rejeitar contribuições, bloquear participantes ou aplicar outras medidas proporcionais quando este código for violado.
+## Enforcement
 
-As decisões devem considerar:
+Maintainers may edit or remove content, close discussions, reject contributions, block participants, or take other proportionate measures when this code is violated.
 
-- gravidade e frequência da conduta;
-- impacto sobre pessoas e sobre o projeto;
-- histórico de advertências;
-- disposição para corrigir o comportamento;
-- necessidade de proteger a comunidade.
+Decisions should consider:
 
-## Relato
+- the severity and frequency of the conduct;
+- the impact on people and the project;
+- the history of warnings;
+- the willingness to correct the behavior;
+- the need to protect the community.
 
-Problemas de conduta devem ser comunicados de forma privada ao mantenedor por um canal associado ao perfil do responsável pelo repositório. Inclua contexto suficiente, links e evidências relevantes. Não publique informações pessoais ou sensíveis em issues.
+## Reporting
 
-Relatos serão analisados de forma confidencial na medida do possível. Retaliação contra quem relata um problema de boa-fé não será tolerada.
+Conduct concerns should be reported privately to the maintainer through a channel associated with the repository owner's profile. Include sufficient context, links, and relevant evidence. Do not publish personal or sensitive information in issues.
 
-## Escopo
+Reports will be reviewed confidentially to the extent possible. Retaliation against anyone who reports a concern in good faith will not be tolerated.
 
-Este código aplica-se a qualquer espaço oficial do projeto e a representações públicas do projeto, inclusive quando uma pessoa usa conta, endereço ou identidade vinculada à manutenção do repositório.
+## Scope
+
+This code applies to every official project space and to public representations of the project, including situations in which a person uses an account, address, or identity associated with repository maintenance.
