@@ -89,12 +89,19 @@ Consulte o [catálogo de nós](docs/NODES.md) para entradas, saídas, comportame
 ├── web/                   # Extensões JavaScript do ComfyUI
 ├── __init__.py            # Ponto de entrada da extensão
 ├── PLAN0.md               # Plano da profissionalização inicial
-└── pyproject.toml         # Configuração das ferramentas de qualidade
+├── pyproject.toml         # Configuração das ferramentas de qualidade
+└── requirements-test.txt  # Dependências para testes fora do ComfyUI
 ```
 
 ## Testes
 
-A suíte padrão usa a biblioteca `unittest` do Python:
+Em um ambiente Python isolado, instale primeiro a dependência usada pelos testes de metadados:
+
+```bash
+python -m pip install -r requirements-test.txt
+```
+
+Depois execute:
 
 ```bash
 python -m compileall -q .
