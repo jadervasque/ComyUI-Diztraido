@@ -1,63 +1,65 @@
+**Languages:** [English](README.md) · [Português (Brasil)](docs/lang/pt-BR/README.md) · [Español](docs/lang/es/README.md)
+
 # ComfyUI-Diztraido
 
 [![CI](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml/badge.svg)](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml)
 
-Coleção de nós personalizados para o ComfyUI, com foco em composição de workflows Flux, leitura de metadados e utilidades reutilizáveis. O projeto separa integração com o ComfyUI, regras de negócio, rotas locais, extensões JavaScript e testes automatizados.
+A collection of custom nodes for ComfyUI focused on Flux workflow composition, metadata inspection, and reusable utilities. The project separates ComfyUI integration, business rules, local routes, JavaScript extensions, and automated tests.
 
-> O projeto está em desenvolvimento. IDs de nós e contratos públicos são preservados para reduzir incompatibilidades com workflows existentes.
+> The project is under active development. Node IDs and public contracts are preserved to reduce incompatibilities with existing workflows.
 
-## Recursos
+## Features
 
-- Leitura visual e extração avançada de metadados de imagens.
-- Geração de seed no backend a cada execução.
-- Carregadores compostos para Flux.1 e Flux.2.
-- Aplicação sequencial de Low-Rank Adaptation (LoRA) em modelos Flux.
-- Encadeamento de imagens de referência com conditioning e guidance.
-- Pipeline composto de amostragem e decodificação.
-- Seletor de resolução por proporção e megapixels.
-- Formatação de strings com entradas dinâmicas e expressões condicionais.
-- Extensões JavaScript para widgets e pré-visualizações dinâmicas.
-- Testes unitários e integração contínua no GitHub Actions.
+- Visual inspection and advanced extraction of image metadata.
+- Backend-generated random seeds for each workflow execution.
+- Composite loaders for Flux.1 and Flux.2.
+- Sequential Low-Rank Adaptation (LoRA) application for Flux models.
+- Reference-image chaining with conditioning and guidance.
+- Composite sampling and decoding pipeline.
+- Resolution selection by aspect ratio and megapixel target.
+- String formatting with dynamic inputs and conditional expressions.
+- JavaScript extensions for dynamic widgets and previews.
+- Unit tests and continuous integration with GitHub Actions.
 
-## Instalação
+## Installation
 
 ### Git
 
-Clone o repositório dentro da pasta `custom_nodes` da sua instalação do ComfyUI:
+Clone the repository into the `custom_nodes` directory of your ComfyUI installation:
 
 ```bash
 cd ComfyUI/custom_nodes
 git clone https://github.com/jadervasque/ComyUI-Diztraido.git
 ```
 
-Reinicie o ComfyUI. Os nós estarão disponíveis nas categorias `Diztraido`.
+Restart ComfyUI. The nodes will be available under the `Diztraido` categories.
 
-### Atualização
+### Updating
 
 ```bash
 cd ComfyUI/custom_nodes/ComyUI-Diztraido
 git pull
 ```
 
-Reinicie o ComfyUI após atualizar.
+Restart ComfyUI after updating.
 
-## Requisitos
+## Requirements
 
-- Uma instalação funcional do ComfyUI.
-- A versão do Python suportada pela instalação utilizada.
-- Modelos e recursos exigidos pelos nós nativos usados em cada workflow.
+- A working ComfyUI installation.
+- A Python version supported by that ComfyUI installation.
+- The models and resources required by the native nodes used in each workflow.
 
-O repositório não declara dependências Python adicionais obrigatórias de runtime. Os nós compostos reutilizam funcionalidades fornecidas pelo próprio ComfyUI.
+The repository does not declare additional mandatory Python runtime dependencies. Composite nodes reuse functionality provided by ComfyUI itself.
 
-## Nós disponíveis
+## Available nodes
 
-| Grupo | Nó | ID interno |
+| Group | Node | Internal ID |
 |---|---|---|
-| Metadados | Diztraido: Metadata Reader | `DiztraidoMetadataReader` |
-| Metadados | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
-| Utilidades | Backend Random Seed | `BackendRandomSeed` |
-| Utilidades | Resolution Selector Extended | `DiztraidoResolutionSelector` |
-| Utilidades | String Format | `DiztraidoStringFormat` |
+| Metadata | Diztraido: Metadata Reader | `DiztraidoMetadataReader` |
+| Metadata | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
+| Utilities | Backend Random Seed | `BackendRandomSeed` |
+| Utilities | Resolution Selector Extended | `DiztraidoResolutionSelector` |
+| Utilities | String Format | `DiztraidoStringFormat` |
 | Flux | Flux Load References | `DiztraidoReferenceChain` |
 | Flux | Flux Sampler | `DiztraidoProcessingBundle` |
 | Flux | Load Flux.1 Models | `DiztraidoLoadFlux1Models` |
@@ -65,59 +67,63 @@ O repositório não declara dependências Python adicionais obrigatórias de run
 | Flux | Load Flux.2 Models | `DiztraidoLoadFlux2Models` |
 | Flux | Load Flux.2 Models + LoRAs | `DiztraidoLoadFlux2ModelsLoras` |
 
-Consulte o [catálogo de nós](docs/NODES.md) para entradas, saídas, comportamento e exemplos.
+See the [node catalog](docs/NODES.md) for inputs, outputs, behavior, and examples.
 
-## Documentação
+## Documentation
 
-- [Arquitetura](docs/ARCHITECTURE.md): camadas, fluxo de carregamento e regras de compatibilidade.
-- [Desenvolvimento](docs/DEVELOPMENT.md): ambiente, testes, convenções e extensão do projeto.
-- [Catálogo de nós](docs/NODES.md): descrição funcional dos nós disponíveis.
-- [Como contribuir](CONTRIBUTING.md): processo para issues e pull requests.
-- [Política de segurança](SECURITY.md): relato responsável de vulnerabilidades.
-- [Changelog](CHANGELOG.md): alterações relevantes do projeto.
+- [Architecture](docs/ARCHITECTURE.md): layers, loading flow, and compatibility rules.
+- [Development guide](docs/DEVELOPMENT.md): environment, tests, conventions, and project extension.
+- [Node catalog](docs/NODES.md): functional description of the available nodes.
+- [Contributing](CONTRIBUTING.md): process for issues and pull requests.
+- [Code of conduct](CODE_OF_CONDUCT.md): expected behavior in project spaces.
+- [Security policy](SECURITY.md): responsible vulnerability reporting.
+- [Changelog](CHANGELOG.md): relevant project changes.
 
-## Estrutura
+Translated documentation is maintained under `docs/lang/pt-BR/` and `docs/lang/es/`. Every public documentation file includes language navigation in its header.
+
+## Repository structure
 
 ```text
 .
-├── .github/               # Workflows e templates de colaboração
-├── docs/                  # Documentação técnica e funcional
-├── nodes/                 # Adaptadores e definições dos nós
-├── routes/                # Endpoints locais usados pelo frontend
-├── services/              # Regras reutilizáveis e orquestração
-├── tests/                 # Testes unitários
-├── web/                   # Extensões JavaScript do ComfyUI
-├── __init__.py            # Ponto de entrada da extensão
-├── PLAN0.md               # Plano da profissionalização inicial
-├── pyproject.toml         # Configuração das ferramentas de qualidade
-└── requirements-test.txt  # Dependências para testes fora do ComfyUI
+├── .github/               # Workflows and collaboration templates
+├── docs/                  # Technical and functional documentation
+│   └── lang/              # Portuguese and Spanish translations
+├── nodes/                 # Node adapters and definitions
+├── routes/                # Local endpoints used by the frontend
+├── services/              # Reusable rules and orchestration
+├── tests/                 # Unit tests
+├── web/                   # ComfyUI JavaScript extensions
+├── __init__.py            # Extension entry point
+├── PLAN0.md               # Initial professionalization plan
+├── pyproject.toml         # Quality-tool configuration
+└── requirements-test.txt  # Dependencies for tests outside ComfyUI
 ```
 
-## Testes
+## Tests
 
-Em um ambiente Python isolado, instale primeiro a dependência usada pelos testes de metadados:
+In an isolated Python environment, first install the dependency used by the metadata tests:
 
 ```bash
 python -m pip install -r requirements-test.txt
 ```
 
-Depois execute:
+Then run:
 
 ```bash
 python -m compileall -q .
 python -m unittest discover -s tests -v
 ```
 
-Ferramentas opcionais, como Ruff, Pytest e Coverage, possuem configuração em `pyproject.toml`. Consulte o [guia de desenvolvimento](docs/DEVELOPMENT.md).
+Optional tools such as Ruff, Pytest, and Coverage are configured in `pyproject.toml`. See the [development guide](docs/DEVELOPMENT.md).
 
-## Contribuição
+## Contributing
 
-Antes de contribuir, leia `CONTRIBUTING.md` e `CODE_OF_CONDUCT.md`. Pull requests devem preservar IDs, entradas e saídas dos nós, salvo quando incluírem uma estratégia explícita de migração.
+Before contributing, read `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`. Pull requests must preserve node IDs, inputs, and outputs unless they include an explicit migration strategy.
 
-## Segurança
+## Security
 
-Não publique vulnerabilidades ainda não corrigidas em issues. Siga as instruções de `SECURITY.md` para contato privado e divulgação responsável.
+Do not disclose unpatched vulnerabilities in public issues. Follow `SECURITY.md` for private contact and responsible disclosure instructions.
 
-## Licença e direitos de uso
+## License and usage rights
 
-O código está publicamente visível, mas não possui licença open source permissiva. Todos os direitos permanecem reservados conforme o arquivo `LICENSE`. Entre em contato com o titular antes de reutilizar, redistribuir ou criar trabalhos derivados.
+The source code is publicly visible but is not distributed under a permissive open-source license. All rights remain reserved as stated in `LICENSE`. Contact the copyright holder before reusing, redistributing, or creating derivative works.
