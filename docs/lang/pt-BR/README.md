@@ -3,6 +3,7 @@
 # ComfyUI-Diztraido
 
 [![CI](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml/badge.svg)](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml)
+[![Versão](https://img.shields.io/badge/versão-0.1.0-blue)](CHANGELOG.md)
 
 Coleção de nós personalizados para o ComfyUI, com foco em composição de workflows Flux, leitura de metadados e utilidades reutilizáveis. O projeto separa integração com o ComfyUI, regras de negócio, rotas locais, extensões JavaScript e testes automatizados.
 
@@ -23,9 +24,21 @@ Coleção de nós personalizados para o ComfyUI, com foco em composição de wor
 
 ## Instalação
 
+### ComfyUI-Manager e Comfy Registry
+
+Pesquise por **Diztraido Nodes** no ComfyUI-Manager e instale o pacote do Registry identificado como `diztraido-nodes`.
+
+Com o Comfy CLI, use:
+
+```bash
+comfy node install diztraido-nodes
+```
+
+Reinicie o ComfyUI após a instalação. Os nós estarão disponíveis nas categorias `Diztraido`.
+
 ### Git
 
-Clone o repositório dentro da pasta `custom_nodes` da sua instalação do ComfyUI:
+Como alternativa, clone o repositório dentro da pasta `custom_nodes` da sua instalação do ComfyUI:
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -34,19 +47,23 @@ git clone https://github.com/jadervasque/ComyUI-Diztraido.git
 
 Reinicie o ComfyUI. Os nós estarão disponíveis nas categorias `Diztraido`.
 
-### Atualização
+### Atualização de uma instalação Git
 
 ```bash
 cd ComfyUI/custom_nodes/ComyUI-Diztraido
 git pull
 ```
 
-Reinicie o ComfyUI após atualizar.
+Reinicie o ComfyUI após atualizar. Instalações feitas pelo Registry devem ser atualizadas pelo ComfyUI-Manager, mantendo o controle da versão semântica selecionada.
+
+## Versionamento
+
+A versão atual publicada no Registry é `0.1.0`. Versões publicadas são imutáveis e seguem Versionamento Semântico. A versão declarada no `pyproject.toml` é a fonte usada pelo workflow de publicação.
 
 ## Requisitos
 
 - Uma instalação funcional do ComfyUI.
-- A versão do Python suportada pela instalação utilizada.
+- Python 3.10 ou posterior, respeitando as versões suportadas pela instalação do ComfyUI.
 - Modelos e recursos exigidos pelos nós nativos usados em cada workflow.
 
 O repositório não declara dependências Python adicionais obrigatórias de runtime. Os nós compostos reutilizam funcionalidades fornecidas pelo próprio ComfyUI.
@@ -95,7 +112,7 @@ A documentação oficial em inglês é canônica. Esta tradução é mantida em 
 ├── web/                   # Extensões JavaScript do ComfyUI
 ├── __init__.py            # Ponto de entrada da extensão
 ├── PLAN0.md               # Plano da profissionalização inicial
-├── pyproject.toml         # Configuração das ferramentas de qualidade
+├── pyproject.toml         # Metadados do Registry e ferramentas de qualidade
 └── requirements-test.txt  # Dependências para testes fora do ComfyUI
 ```
 
