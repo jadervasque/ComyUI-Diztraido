@@ -21,6 +21,7 @@ Nós personalizados para o ComfyUI, organizados para facilitar manutenção e in
 - **Load Flux.2 Models + LoRAs**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
 - **Load Flux.1 Models**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux` como padrão no `DualCLIPLoader`.
 - **Load Flux.1 Models + LoRAs**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
+- **Resolution Selector Extended**: calcula `width` e `height` por megapixels e proporção, preservando as opções do `Resolution Selector` nativo, adicionando formatos clássicos, sociais, fotográficos e panorâmicos e exibindo a resolução resultante em tempo real.
 - **String Format**: monta uma string com entradas dinâmicas `STRING`, `INT`, `FLOAT` ou `BOOLEAN`, placeholders posicionais e expressões ternárias booleanas.
 
 ## Uso dos nós compostos
