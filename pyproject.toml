@@ -1,3 +1,24 @@
+[project]
+name = "diztraido-nodes"
+version = "0.1.0"
+description = "Custom nodes for ComfyUI focused on Flux workflows, metadata inspection, and reusable utilities."
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = []
+classifiers = [
+  "Operating System :: OS Independent",
+]
+
+[project.urls]
+Repository = "https://github.com/jadervasque/ComyUI-Diztraido"
+Documentation = "https://github.com/jadervasque/ComyUI-Diztraido#readme"
+"Bug Tracker" = "https://github.com/jadervasque/ComyUI-Diztraido/issues"
+Changelog = "https://github.com/jadervasque/ComyUI-Diztraido/blob/master/CHANGELOG.md"
+
+[tool.comfy]
+PublisherId = "diztraido"
+DisplayName = "Diztraido Nodes"
+
 [tool.ruff]
 target-version = "py310"
 line-length = 100
