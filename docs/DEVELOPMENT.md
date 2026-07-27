@@ -35,6 +35,14 @@ Prefixos recomendados:
 
 ## Testes
 
+Em um ambiente isolado, instale as dependências usadas pela suíte:
+
+```bash
+python -m pip install -r requirements-test.txt
+```
+
+O Pillow é importado pelos testes de metadados e normalmente já está disponível no ambiente do ComfyUI.
+
 Execute a suíte padrão:
 
 ```bash
@@ -58,7 +66,7 @@ coverage run -m unittest discover -s tests
 coverage report
 ```
 
-A integração contínua executa compilação e testes unitários em múltiplas versões do Python.
+A integração contínua instala `requirements-test.txt` e executa compilação e testes unitários em múltiplas versões do Python.
 
 ## Convenções de código
 
