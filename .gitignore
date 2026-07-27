@@ -1,8 +1,60 @@
-# Artefatos gerados pelo Python
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
-
-# Ambientes e ferramentas locais
-.venv/
+*$py.class
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging and build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test and analysis output
+coverage.xml
+junit.xml
+.pyre/
+.pytype/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# Operating systems
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# ComfyUI local/runtime artifacts
+input/
+output/
+models/
+user/

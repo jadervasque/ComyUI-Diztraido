@@ -1,104 +1,123 @@
 # ComfyUI-Diztraido
 
-Nós personalizados para o ComfyUI, organizados para facilitar manutenção e inclusão de novas funcionalidades.
+[![CI](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml/badge.svg)](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml)
 
-## Estrutura
+Coleção de nós personalizados para o ComfyUI, com foco em composição de workflows Flux, leitura de metadados e utilidades reutilizáveis. O projeto separa integração com o ComfyUI, regras de negócio, rotas locais, extensões JavaScript e testes automatizados.
 
-- `nodes/`: um arquivo por nó e o registro central em `nodes/__init__.py`.
-- `services/`: regras reutilizáveis que não pertencem à interface dos nós.
-- `routes/`: endpoints locais consumidos pela interface dos nós.
-- `web/`: extensões JavaScript carregadas pelo ComfyUI.
-- `__init__.py`: ponto de entrada mínimo exigido pelo ComfyUI.
+> O projeto está em desenvolvimento. IDs de nós e contratos públicos são preservados para reduzir incompatibilidades com workflows existentes.
+
+## Recursos
+
+- Leitura visual e extração avançada de metadados de imagens.
+- Geração de seed no backend a cada execução.
+- Carregadores compostos para Flux.1 e Flux.2.
+- Aplicação sequencial de Low-Rank Adaptation (LoRA) em modelos Flux.
+- Encadeamento de imagens de referência com conditioning e guidance.
+- Pipeline composto de amostragem e decodificação.
+- Seletor de resolução por proporção e megapixels.
+- Formatação de strings com entradas dinâmicas e expressões condicionais.
+- Extensões JavaScript para widgets e pré-visualizações dinâmicas.
+- Testes unitários e integração contínua no GitHub Actions.
+
+## Instalação
+
+### Git
+
+Clone o repositório dentro da pasta `custom_nodes` da sua instalação do ComfyUI:
+
+```bash
+cd ComfyUI/custom_nodes
+git clone https://github.com/jadervasque/ComyUI-Diztraido.git
+```
+
+Reinicie o ComfyUI. Os nós estarão disponíveis nas categorias `Diztraido`.
+
+### Atualização
+
+```bash
+cd ComfyUI/custom_nodes/ComyUI-Diztraido
+git pull
+```
+
+Reinicie o ComfyUI após atualizar.
+
+## Requisitos
+
+- Uma instalação funcional do ComfyUI.
+- A versão do Python suportada pela instalação utilizada.
+- Modelos e recursos exigidos pelos nós nativos usados em cada workflow.
+
+O repositório não declara dependências Python adicionais obrigatórias de runtime. Os nós compostos reutilizam funcionalidades fornecidas pelo próprio ComfyUI.
 
 ## Nós disponíveis
 
-- **Diztraido: Metadata Reader**: painel visual sem saídas. Ao escolher ou enviar uma imagem, mostra imediatamente o JSON completo dos metadados e permite buscá-lo em tempo real, sem executar o workflow.
-- **Diztraido: Metadata Reader Advanced**: extrai prompt, prompt negativo, seed, steps, CFG, sampler, scheduler, modelo, dimensões e os metadados em texto/JSON.
-- **Backend Random Seed**: gera uma seed nova a cada execução do workflow.
-- **Flux Load References**: concentra `CLIPTextEncode` + `FluxGuidance` + encadeamento de referências (`LoadImage` -> `VAEEncode` -> `ReferenceLatent`) em um único nó. Possui botões **Add Reference** e **Remove** para controlar quantas referências ficam ativas e encaminha o `vae` de entrada para a saída.
-- **Flux Sampler**: concentra o grupo de processamento (`RandomNoise`, `KSamplerSelect`, `Flux2Scheduler`, `EmptyFlux2LatentImage`, `SamplerCustomAdvanced`, `VAEDecode`) em um único nó.
-- **Load Flux.2 Models**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux2` como padrão no `Load CLIP`.
-- **Load Flux.2 Models + LoRAs**: integra `Load Diffusion Model` + `Load CLIP` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
-- **Load Flux.1 Models**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` em um único nó, mantendo os mesmos campos dos nós originais e com `type=flux` como padrão no `DualCLIPLoader`.
-- **Load Flux.1 Models + LoRAs**: integra `Load Diffusion Model` + `DualCLIPLoader` + `Load VAE` e aplica múltiplas LoRAs em sequência, com botões **Add LoRA** e **Remove**.
-- **Resolution Selector Extended**: calcula `width` e `height` por megapixels e proporção, preservando as opções do `Resolution Selector` nativo, adicionando formatos clássicos, sociais, fotográficos e panorâmicos e exibindo a resolução resultante em tempo real.
-- **String Format**: monta uma string com entradas dinâmicas `STRING`, `INT`, `FLOAT` ou `BOOLEAN`, placeholders posicionais e expressões ternárias booleanas.
+| Grupo | Nó | ID interno |
+|---|---|---|
+| Metadados | Diztraido: Metadata Reader | `DiztraidoMetadataReader` |
+| Metadados | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
+| Utilidades | Backend Random Seed | `BackendRandomSeed` |
+| Utilidades | Resolution Selector Extended | `DiztraidoResolutionSelector` |
+| Utilidades | String Format | `DiztraidoStringFormat` |
+| Flux | Flux Load References | `DiztraidoReferenceChain` |
+| Flux | Flux Sampler | `DiztraidoProcessingBundle` |
+| Flux | Load Flux.1 Models | `DiztraidoLoadFlux1Models` |
+| Flux | Load Flux.1 Models + LoRAs | `DiztraidoLoadFlux1ModelsLoras` |
+| Flux | Load Flux.2 Models | `DiztraidoLoadFlux2Models` |
+| Flux | Load Flux.2 Models + LoRAs | `DiztraidoLoadFlux2ModelsLoras` |
 
-## Uso dos nós compostos
+Consulte o [catálogo de nós](docs/NODES.md) para entradas, saídas, comportamento e exemplos.
 
-### Flux Load References
+## Documentação
 
-1. Conecte `clip` e `vae`.
-2. Preencha `text_prompt`.
-3. Defina `guidance`.
-4. Clique em **Add Reference** para ativar novos campos `image_ref_N`.
-5. Selecione as imagens de referência desejadas.
-6. Use as saídas `conditioning` e `vae` para seguir o pipeline de forma ordenada.
+- [Arquitetura](docs/ARCHITECTURE.md): camadas, fluxo de carregamento e regras de compatibilidade.
+- [Desenvolvimento](docs/DEVELOPMENT.md): ambiente, testes, convenções e extensão do projeto.
+- [Catálogo de nós](docs/NODES.md): descrição funcional dos nós disponíveis.
+- [Como contribuir](CONTRIBUTING.md): processo para issues e pull requests.
+- [Política de segurança](SECURITY.md): relato responsável de vulnerabilidades.
+- [Changelog](CHANGELOG.md): alterações relevantes do projeto.
 
-Opcional: conecte `initial_latent` para aplicar um `ReferenceLatent` inicial antes das imagens.
+## Estrutura
 
-### Flux Sampler
+```text
+.
+├── .github/               # Workflows e templates de colaboração
+├── docs/                  # Documentação técnica e funcional
+├── nodes/                 # Adaptadores e definições dos nós
+├── routes/                # Endpoints locais usados pelo frontend
+├── services/              # Regras reutilizáveis e orquestração
+├── tests/                 # Testes unitários
+├── web/                   # Extensões JavaScript do ComfyUI
+├── __init__.py            # Ponto de entrada da extensão
+├── PLAN0.md               # Plano da profissionalização inicial
+├── pyproject.toml         # Configuração das ferramentas de qualidade
+└── requirements-test.txt  # Dependências para testes fora do ComfyUI
+```
 
-1. Conecte `model`, `conditioning` e `vae`.
-2. Configure `noise_seed`, `sampler_name`, `steps`, `width`, `height` e `batch_size`.
-3. Use a saída `image` diretamente no preview ou em pós-processamento.
+## Testes
 
-### Load Flux.2 Models
+Em um ambiente Python isolado, instale primeiro a dependência usada pelos testes de metadados:
 
-1. Configure os campos de `Load Diffusion Model`.
-2. Configure os campos de `Load CLIP` (com `type=flux2` por padrão).
-3. Configure o `Load VAE`.
-4. Use as saídas `model`, `clip` e `vae` no workflow.
+```bash
+python -m pip install -r requirements-test.txt
+```
 
-### Load Flux.2 Models + LoRAs
+Depois execute:
 
-1. Configure os campos de `Load Diffusion Model`.
-2. Configure os campos de `Load CLIP` (com `type=flux2` por padrão).
-3. Configure o `Load VAE`.
-4. Clique em **Add LoRA** para ativar campos de LoRA.
-5. Para cada LoRA, selecione o arquivo e ajuste `strength_model` e `strength_clip`.
-6. Use as saídas `model`, `clip` e `vae` no workflow.
+```bash
+python -m compileall -q .
+python -m unittest discover -s tests -v
+```
 
-### Load Flux.1 Models
+Ferramentas opcionais, como Ruff, Pytest e Coverage, possuem configuração em `pyproject.toml`. Consulte o [guia de desenvolvimento](docs/DEVELOPMENT.md).
 
-1. Configure os campos de `Load Diffusion Model`.
-2. Configure os campos de `DualCLIPLoader` (com `type=flux` por padrão).
-3. Configure o `Load VAE`.
-4. Use as saídas `model`, `clip` e `vae` no workflow.
+## Contribuição
 
-### Load Flux.1 Models + LoRAs
+Antes de contribuir, leia `CONTRIBUTING.md` e `CODE_OF_CONDUCT.md`. Pull requests devem preservar IDs, entradas e saídas dos nós, salvo quando incluírem uma estratégia explícita de migração.
 
-1. Configure os campos de `Load Diffusion Model`.
-2. Configure os campos de `DualCLIPLoader` (com `type=flux` por padrão).
-3. Configure o `Load VAE`.
-4. Clique em **Add LoRA** para ativar campos de LoRA.
-5. Para cada LoRA, selecione o arquivo e ajuste `strength_model` e `strength_clip`.
-6. Use as saídas `model`, `clip` e `vae` no workflow.
+## Segurança
 
-### String Format
+Não publique vulnerabilidades ainda não corrigidas em issues. Siga as instruções de `SECURITY.md` para contato privado e divulgação responsável.
 
-1. Defina `input_count` para criar os sockets `input_1`, `input_2`, etc.
-2. Conecte valores `STRING`, `INT`, `FLOAT` ou `BOOLEAN`; o tipo é reconhecido automaticamente.
-3. Use `{1}`, `{2}`, etc. no campo `template` para inserir os valores pela posição.
-4. Ative `single_line_output` para substituir parágrafos e quebras de linha por espaços.
-5. Use a saída `string` no restante do workflow.
+## Licença e direitos de uso
 
-Exemplos:
-
-- `File_{1}_teste_{2}` produz `File_image_teste_10` para as entradas `image` e `10`.
-- `@{{1}?"Texto A":"Texto B"}` escolhe o texto usando `input_1`.
-- `@{{1}=={2}?"Iguais":"Diferentes"}` compara os valores preservando seus tipos.
-- `@{{1}&&{2}?"Ambos":"Outro"}` exige que as duas entradas sejam verdadeiras.
-- `@{!({1}||{2})?"Nenhum":"Algum"}` combina negação e parênteses.
-- `{{nome}}_{1}` produz uma chave literal: `{nome}_valor`.
-- Uma linha iniciada por `#` (inclusive após espaços) é tratada como comentário e removida da saída.
-
-Operadores suportados: `==`, `!=`, `<`, `<=`, `>`, `>=`, `!`, `&`, `&&`, `|`, `||` e parênteses. Comparações têm precedência sobre `&&`/`&`, que têm precedência sobre `||`/`|`. Strings `true`, `1`, `yes` e `on` são verdadeiras; `false`, `0`, `no`, `off`, `none`, `null` e string vazia são falsas.
-
-## Como adicionar um nó
-
-1. Crie `nodes/meu_no.py` com a classe do nó.
-2. Importe-a em `nodes/__init__.py`.
-3. Acrescente a classe em `NODE_CLASS_MAPPINGS` e seu rótulo em `NODE_DISPLAY_NAME_MAPPINGS`.
-
-O ComfyUI carrega somente os mapeamentos exportados pelo `__init__.py` raiz.
+O código está publicamente visível, mas não possui licença open source permissiva. Todos os direitos permanecem reservados conforme o arquivo `LICENSE`. Entre em contato com o titular antes de reutilizar, redistribuir ou criar trabalhos derivados.

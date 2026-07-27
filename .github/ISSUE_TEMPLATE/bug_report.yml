@@ -1,0 +1,106 @@
+name: Relatar um bug
+description: Informe um comportamento reproduzível que precisa de correção.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado pelo relato. Não publique vulnerabilidades de segurança aqui; consulte SECURITY.md.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumo
+      description: Descreva o problema de forma objetiva.
+      placeholder: O que ocorreu?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Forneça um caso mínimo e numerado.
+      placeholder: |
+        1. Adicione o nó...
+        2. Configure...
+        3. Execute...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento observado
+    validations:
+      required: true
+
+  - type: input
+    id: comfyui_version
+    attributes:
+      label: Versão ou commit do ComfyUI
+      placeholder: Exemplo: commit abc1234
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Versão ou commit do ComfyUI-Diztraido
+      placeholder: Exemplo: master em abc1234
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Sistema operacional
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Outro
+    validations:
+      required: true
+
+  - type: input
+    id: python_version
+    attributes:
+      label: Versão do Python
+      placeholder: Exemplo: 3.11.9
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs relevantes
+      description: Remova caminhos privados, tokens, prompts sensíveis e outros dados pessoais.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Contexto adicional
+      description: Inclua workflow mínimo ou capturas de tela quando puder compartilhá-los com segurança.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmações
+      options:
+        - label: Pesquisei issues existentes e não encontrei uma duplicata.
+          required: true
+        - label: Removi informações pessoais e credenciais do relato.
+          required: true
+        - label: Este relato não descreve uma vulnerabilidade ainda não corrigida.
+          required: true

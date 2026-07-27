@@ -1,0 +1,2 @@
+# Dependency imported by metadata tests and normally provided by ComfyUI.
+Pillow>=9.0
