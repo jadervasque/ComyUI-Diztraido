@@ -3,6 +3,7 @@
 # ComfyUI-Diztraido
 
 [![CI](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml/badge.svg)](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
 
 A collection of custom nodes for ComfyUI focused on Flux workflow composition, metadata inspection, and reusable utilities. The project separates ComfyUI integration, business rules, local routes, JavaScript extensions, and automated tests.
 
@@ -23,9 +24,21 @@ A collection of custom nodes for ComfyUI focused on Flux workflow composition, m
 
 ## Installation
 
+### ComfyUI-Manager and Comfy Registry
+
+Search for **Diztraido Nodes** in ComfyUI-Manager and install the Registry package identified as `diztraido-nodes`.
+
+With Comfy CLI, use:
+
+```bash
+comfy node install diztraido-nodes
+```
+
+Restart ComfyUI after installation. The nodes will be available under the `Diztraido` categories.
+
 ### Git
 
-Clone the repository into the `custom_nodes` directory of your ComfyUI installation:
+As a fallback, clone the repository into the `custom_nodes` directory of your ComfyUI installation:
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -34,19 +47,23 @@ git clone https://github.com/jadervasque/ComyUI-Diztraido.git
 
 Restart ComfyUI. The nodes will be available under the `Diztraido` categories.
 
-### Updating
+### Updating a Git installation
 
 ```bash
 cd ComfyUI/custom_nodes/ComyUI-Diztraido
 git pull
 ```
 
-Restart ComfyUI after updating.
+Restart ComfyUI after updating. Registry installations should be updated through ComfyUI-Manager so the selected semantic version remains controlled by the Registry.
+
+## Versioning
+
+The current Registry release is `0.1.0`. Published Registry versions are immutable and follow Semantic Versioning. The version declared in `pyproject.toml` is the source used by the publication workflow.
 
 ## Requirements
 
 - A working ComfyUI installation.
-- A Python version supported by that ComfyUI installation.
+- Python 3.10 or later, subject to the Python versions supported by the installed ComfyUI release.
 - The models and resources required by the native nodes used in each workflow.
 
 The repository does not declare additional mandatory Python runtime dependencies. Composite nodes reuse functionality provided by ComfyUI itself.
@@ -95,7 +112,7 @@ Translated documentation is maintained under `docs/lang/pt-BR/` and `docs/lang/e
 ├── web/                   # ComfyUI JavaScript extensions
 ├── __init__.py            # Extension entry point
 ├── PLAN0.md               # Initial professionalization plan
-├── pyproject.toml         # Quality-tool configuration
+├── pyproject.toml         # Registry metadata and quality-tool configuration
 └── requirements-test.txt  # Dependencies for tests outside ComfyUI
 ```
 
