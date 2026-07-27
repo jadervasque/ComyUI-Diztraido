@@ -1,12 +1,49 @@
-# Diretrizes do Repositório
+# Diretrizes do repositório
 
-- Mantenha o ponto de entrada __init__.py mínimo; registre os nós em nodes/__init__.py.
-- Crie um arquivo por nó em nodes/. Não concentre implementações de nós em um único arquivo.
-- Coloque regras reutilizáveis e independentes da interface do ComfyUI em services/.
-- Preserve IDs de nós e contratos públicos (entradas, saídas e tipos) existentes, salvo solicitação explícita de alteração.
-- Use tipagem, docstrings curtas e nomes claros. Evite duplicação e código morto.
-- Não versione artefatos gerados, caches, ambientes virtuais ou arquivos temporários.
-- Para novas funcionalidades e correções, adicione ou atualize testes em tests/.
-- Antes de finalizar, execute os testes relevantes e valide a compatibilidade com o carregamento do ComfyUI.
-- Ao iniciar uma instância do ComfyUI para testes, use uma porta alternativa e preserve a porta padrão 8188 para a sessão principal do usuário.
-- Documente no README.md novos nós, alterações relevantes e o processo de extensão do projeto.
+## Arquitetura
+
+- Mantenha o ponto de entrada `__init__.py` mínimo; registre os nós em `nodes/__init__.py`.
+- Crie um arquivo por nó em `nodes/`. Não concentre implementações independentes no mesmo módulo.
+- Coloque regras reutilizáveis e independentes da interface do ComfyUI em `services/`.
+- Centralize endpoints em `routes/` e o registro em `routes/__init__.py`.
+- Coloque comportamentos de frontend específicos do ComfyUI em `web/`.
+- Preserve a direção de dependências definida em `docs/ARCHITECTURE.md`.
+
+## Compatibilidade
+
+- Preserve IDs de nós e contratos públicos existentes: entradas, saídas, tipos, ordem e estado serializado.
+- Não renomeie endpoints consumidos pelo frontend sem migração coordenada.
+- Documente mudanças incompatíveis no `CHANGELOG.md` e forneça uma estratégia de migração.
+
+## Qualidade
+
+- Use tipagem, docstrings curtas e nomes claros.
+- Evite duplicação, estado global desnecessário e código morto.
+- Para novas funcionalidades e correções, adicione ou atualize testes em `tests/`.
+- Não versione artefatos gerados, caches, ambientes virtuais, modelos, inputs, outputs ou arquivos temporários.
+
+## Validação
+
+Execute antes de finalizar:
+
+```bash
+python -m compileall -q .
+python -m unittest discover -s tests -v
+```
+
+Quando ferramentas opcionais estiverem instaladas:
+
+```bash
+ruff check .
+ruff format --check .
+```
+
+Valide no ComfyUI quando houver alteração em nós, rotas ou JavaScript. Em instâncias secundárias de teste, use uma porta alternativa e preserve a porta padrão `8188` para a sessão principal do usuário.
+
+## Documentação
+
+- Atualize `docs/NODES.md` ao adicionar ou alterar nós.
+- Atualize `docs/ARCHITECTURE.md` ao alterar camadas ou dependências.
+- Atualize `docs/DEVELOPMENT.md` ao alterar o processo de desenvolvimento.
+- Atualize `README.md` quando houver mudanças de instalação, escopo ou uso.
+- Registre alterações relevantes em `CHANGELOG.md`.
