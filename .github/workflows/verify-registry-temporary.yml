@@ -4,24 +4,51 @@ on:
   pull_request:
     paths:
       - ".github/workflows/verify-registry-temporary.yml"
-      - ".github/scripts/inspect_registry_publication.py"
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
   verify-registry:
     name: Inspect diztraido-nodes 0.1.0
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
 
     steps:
-      - name: Check out verification branch
-        uses: actions/checkout@v4
+      - name: Print compact Registry status
+        shell: bash
+        run: |
+          set -u
+          base="https://api.comfy.org"
+          paths=(
+            "/nodes/diztraido-nodes"
+            "/nodes/diztraido-nodes/versions/0.1.0"
+            "/nodes/diztraido-nodes/install?version=0.1.0"
+            "/versions?nodeId=diztraido-nodes&include_status_reason=true&pageSize=20"
+          )
 
-      - name: Inspect publication and Registry status
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python .github/scripts/inspect_registry_publication.py
+          for path in "${paths[@]}"; do
+            http=$(curl --silent --show-error --location \
+              --header "Accept: application/json" \
+              --user-agent "ComyUI-Diztraido-registry-inspector" \
+              --output response.json \
+              --write-out "%{http_code}" \
+              "${base}${path}")
+            echo "ENDPOINT=${path}"
+            echo "HTTP=${http}"
+            jq --compact-output . response.json || cat response.json
+          done
+
+          version_http=$(curl --silent --show-error --location \
+            --header "Accept: application/json" \
+            --user-agent "ComyUI-Diztraido-registry-inspector" \
+            --output version.json \
+            --write-out "%{http_code}" \
+            "${base}/nodes/diztraido-nodes/versions/0.1.0")
+          version_status=$(jq --raw-output '.status // empty' version.json 2>/dev/null || true)
+          echo "FINAL_VERSION_HTTP=${version_http}"
+          echo "FINAL_VERSION_STATUS=${version_status}"
+
+          test "${version_http}" = "200"
+          test "${version_status}" = "NodeVersionStatusActive"
