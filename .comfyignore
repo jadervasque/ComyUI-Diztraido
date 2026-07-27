@@ -1,0 +1,19 @@
+# Development and repository automation
+.github/
+.editorconfig
+.gitattributes
+.gitignore
+AGENTS.md
+PLAN0.md
+
+# Tests and development-only dependencies
+tests/
+requirements-test.txt
+
+# Translated and contributor documentation are available in the repository
+# but are not required at runtime.
+docs/
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
