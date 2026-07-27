@@ -40,4 +40,23 @@ jobs:
         run: python -m compileall -q .
 
       - name: Run unit tests
-        run: python -m unittest discover -s tests -v
+        id: unit-tests
+        continue-on-error: true
+        shell: bash
+        run: python -m unittest discover -s tests -v > unit-test-results.txt 2>&1
+
+      - name: Upload failed test output
+        if: steps.unit-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results-python-${{ matrix.python-version }}
+          path: unit-test-results.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report unit test result
+        if: steps.unit-tests.outcome == 'failure'
+        shell: bash
+        run: |
+          cat unit-test-results.txt
+          exit 1
