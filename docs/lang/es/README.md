@@ -3,6 +3,7 @@
 # ComfyUI-Diztraido
 
 [![CI](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml/badge.svg)](https://github.com/jadervasque/ComyUI-Diztraido/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/badge/versión-0.1.0-blue)](CHANGELOG.md)
 
 Colección de nodos personalizados para ComfyUI, centrada en la composición de flujos de trabajo Flux, la lectura de metadatos y las utilidades reutilizables. El proyecto separa la integración con ComfyUI, las reglas de negocio, las rutas locales, las extensiones JavaScript y las pruebas automatizadas.
 
@@ -23,9 +24,21 @@ Colección de nodos personalizados para ComfyUI, centrada en la composición de 
 
 ## Instalación
 
+### ComfyUI-Manager y Comfy Registry
+
+Busque **Diztraido Nodes** en ComfyUI-Manager e instale el paquete del Registry identificado como `diztraido-nodes`.
+
+Con Comfy CLI, use:
+
+```bash
+comfy node install diztraido-nodes
+```
+
+Reinicie ComfyUI después de la instalación. Los nodos estarán disponibles en las categorías `Diztraido`.
+
 ### Git
 
-Clone el repositorio dentro del directorio `custom_nodes` de su instalación de ComfyUI:
+Como alternativa, clone el repositorio dentro del directorio `custom_nodes` de su instalación de ComfyUI:
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -34,19 +47,23 @@ git clone https://github.com/jadervasque/ComyUI-Diztraido.git
 
 Reinicie ComfyUI. Los nodos estarán disponibles en las categorías `Diztraido`.
 
-### Actualización
+### Actualización de una instalación Git
 
 ```bash
 cd ComfyUI/custom_nodes/ComyUI-Diztraido
 git pull
 ```
 
-Reinicie ComfyUI después de actualizar.
+Reinicie ComfyUI después de actualizar. Las instalaciones realizadas desde el Registry deben actualizarse mediante ComfyUI-Manager para conservar el control de la versión semántica seleccionada.
+
+## Versionado
+
+La versión actual publicada en el Registry es `0.1.0`. Las versiones publicadas son inmutables y siguen Versionado Semántico. La versión declarada en `pyproject.toml` es la fuente utilizada por el workflow de publicación.
 
 ## Requisitos
 
 - Una instalación funcional de ComfyUI.
-- Una versión de Python compatible con esa instalación de ComfyUI.
+- Python 3.10 o posterior, respetando las versiones compatibles con la instalación de ComfyUI.
 - Los modelos y recursos requeridos por los nodos nativos utilizados en cada flujo de trabajo.
 
 El repositorio no declara dependencias adicionales obligatorias de Python en tiempo de ejecución. Los nodos compuestos reutilizan funcionalidades proporcionadas por ComfyUI.
@@ -95,7 +112,7 @@ La documentación oficial en inglés es la versión canónica. Esta traducción 
 ├── web/                   # Extensiones JavaScript de ComfyUI
 ├── __init__.py            # Punto de entrada de la extensión
 ├── PLAN0.md               # Plan inicial de profesionalización
-├── pyproject.toml         # Configuración de herramientas de calidad
+├── pyproject.toml         # Metadatos del Registry y herramientas de calidad
 └── requirements-test.txt  # Dependencias para pruebas fuera de ComfyUI
 ```
 
