@@ -1,0 +1,81 @@
+name: Verify Registry publication
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/verify-registry-temporary.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-registry:
+    name: Verify diztraido-nodes 0.1.0
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      - name: Verify package and version through the public Registry API
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import time
+          import urllib.error
+          import urllib.request
+
+          node_id = "diztraido-nodes"
+          expected_version = "0.1.0"
+          url = f"https://api.comfy.org/nodes/{node_id}"
+          last_detail = "No request attempted."
+
+          for attempt in range(1, 25):
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "Accept": "application/json",
+                      "User-Agent": "ComyUI-Diztraido-registry-verifier",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      body = response.read().decode("utf-8")
+                      payload = json.loads(body)
+
+                  actual_id = payload.get("id")
+                  latest = payload.get("latest_version") or {}
+                  actual_version = latest.get("version")
+                  status = payload.get("status")
+                  version_status = latest.get("status")
+
+                  print(
+                      f"Attempt {attempt}: id={actual_id!r}, "
+                      f"version={actual_version!r}, status={status!r}, "
+                      f"version_status={version_status!r}"
+                  )
+
+                  if actual_id == node_id and actual_version == expected_version:
+                      print(
+                          f"Verified: {node_id}@{expected_version} is available "
+                          "through the public Comfy Registry API."
+                      )
+                      raise SystemExit(0)
+
+                  last_detail = json.dumps(payload, indent=2, ensure_ascii=False)[:8000]
+              except urllib.error.HTTPError as error:
+                  body = error.read().decode("utf-8", "replace")
+                  last_detail = f"HTTP {error.code}: {body[:8000]}"
+                  print(f"Attempt {attempt}: {last_detail}")
+              except Exception as error:
+                  last_detail = f"{type(error).__name__}: {error}"
+                  print(f"Attempt {attempt}: {last_detail}")
+
+              if attempt < 24:
+                  time.sleep(10)
+
+          raise SystemExit(
+              f"Registry verification failed for {node_id}@{expected_version}. "
+              f"Last response: {last_detail}"
+          )
+          PY
