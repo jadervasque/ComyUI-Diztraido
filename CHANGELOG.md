@@ -1,27 +1,32 @@
+**Languages:** [English](CHANGELOG.md) · [Português (Brasil)](docs/lang/pt-BR/CHANGELOG.md) · [Español](docs/lang/es/CHANGELOG.md)
+
 # Changelog
 
-Todas as mudanças relevantes deste projeto serão documentadas neste arquivo.
+All notable changes to this project will be documented in this file.
 
-O formato segue os princípios do [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto pretende adotar versionamento semântico quando iniciar lançamentos versionados.
+The format follows the principles of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project intends to adopt Semantic Versioning when versioned releases begin.
 
-## [Não lançado]
+## [Unreleased]
 
-### Adicionado
+### Added
 
-- Planejamento de profissionalização em `PLAN0.md`.
-- Documentação de arquitetura, desenvolvimento e catálogo de nós em `docs/`.
-- Diretrizes de contribuição, código de conduta e política de segurança.
-- Templates para issues e pull requests.
-- Integração contínua para compilação e testes.
-- Configuração do Dependabot para GitHub Actions.
-- Padrões de editor, atributos Git e configuração de ferramentas Python.
-- Aviso explícito de direitos autorais e ausência de licença permissiva.
+- Brazilian Portuguese and Spanish translations under `docs/lang/`.
+- Language navigation in the header of every public documentation file.
+- Professionalization planning in `PLAN0.md`.
+- Architecture, development, and node catalog documentation under `docs/`.
+- Contribution guidelines, code of conduct, and security policy.
+- Issue and pull request templates.
+- Continuous integration for compilation and tests.
+- Dependabot configuration for GitHub Actions.
+- Editor standards, Git attributes, and Python tooling configuration.
+- Explicit copyright notice and statement that no permissive license is granted.
 
-### Alterado
+### Changed
 
-- README reorganizado para instalação, recursos, documentação e manutenção.
-- `.gitignore` ampliado para artefatos de Python, editores, sistemas operacionais e runtime local do ComfyUI.
+- English is now the canonical language for official documentation.
+- README reorganized around installation, features, documentation, and maintenance.
+- `.gitignore` expanded for Python artifacts, editors, operating systems, and local ComfyUI runtime data.
 
-## Histórico anterior
+## Previous history
 
-O desenvolvimento anterior a este changelog está registrado no histórico de commits do Git. Uma futura versão inicial poderá consolidar essas alterações em uma seção versionada.
+Development before this changelog is recorded in the Git commit history. A future initial release may consolidate those changes into a versioned section.

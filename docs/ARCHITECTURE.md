@@ -1,8 +1,10 @@
-# Arquitetura
+**Languages:** [English](ARCHITECTURE.md) · [Português (Brasil)](lang/pt-BR/ARCHITECTURE.md) · [Español](lang/es/ARCHITECTURE.md)
 
-## Visão geral
+# Architecture
 
-O ComfyUI-Diztraido é uma extensão de nós personalizados para o ComfyUI. A arquitetura separa integração com o host, apresentação dos nós, regras reutilizáveis, endpoints HTTP e extensões do frontend.
+## Overview
+
+ComfyUI-Diztraido is a custom-node extension for ComfyUI. Its architecture separates host integration, node presentation, reusable rules, HTTP endpoints, and frontend extensions.
 
 ```text
 ComfyUI
@@ -16,87 +18,87 @@ ComfyUI
           └── web/*.js
 ```
 
-## Componentes
+## Components
 
-### Ponto de entrada
+### Entry point
 
-O `__init__.py` raiz é carregado pelo ComfyUI. Ele:
+The root `__init__.py` is loaded by ComfyUI. It:
 
-- importa `NODE_CLASS_MAPPINGS` e `NODE_DISPLAY_NAME_MAPPINGS`;
-- registra as rotas locais;
-- declara `WEB_DIRECTORY` para carregar as extensões JavaScript.
+- imports `NODE_CLASS_MAPPINGS` and `NODE_DISPLAY_NAME_MAPPINGS`;
+- registers local routes;
+- declares `WEB_DIRECTORY` so JavaScript extensions are loaded.
 
-Esse arquivo deve permanecer pequeno e sem regras de negócio.
+This file must remain small and free of business rules.
 
 ### `nodes/`
 
-Contém a camada de adaptação para o ComfyUI:
+Contains the ComfyUI adapter layer:
 
-- definição de entradas e saídas;
-- categoria e nome exibido;
-- método exposto pelo atributo `FUNCTION`;
-- delegação para funções em `services/` quando existe lógica reutilizável.
+- input and output definitions;
+- category and display name;
+- the method exposed through the `FUNCTION` attribute;
+- delegation to functions in `services/` when reusable logic exists.
 
-O arquivo `nodes/__init__.py` é o registro central. IDs presentes em `NODE_CLASS_MAPPINGS` são contratos públicos e não devem ser alterados sem uma estratégia explícita de migração.
+`nodes/__init__.py` is the central registry. IDs present in `NODE_CLASS_MAPPINGS` are public contracts and must not be changed without an explicit migration strategy.
 
 ### `services/`
 
-Contém lógica independente da interface visual dos nós, como:
+Contains logic independent of the node user interface, including:
 
-- leitura e normalização de metadados;
-- composição de pipelines nativos do ComfyUI;
-- carregamento coordenado de modelos e LoRAs;
-- interpretação e formatação dinâmica de strings.
+- metadata reading and normalization;
+- composition of native ComfyUI pipelines;
+- coordinated model and LoRA loading;
+- dynamic string interpretation and formatting.
 
-Essa camada deve receber valores, executar regras e devolver resultados sem depender de widgets do frontend.
+This layer should receive values, execute rules, and return results without depending on frontend widgets.
 
 ### `routes/`
 
-Contém endpoints HTTP locais usados pelas extensões. `routes/__init__.py` centraliza o registro para manter o ponto de entrada raiz simples.
+Contains local HTTP endpoints used by extensions. `routes/__init__.py` centralizes registration so the root entry point remains simple.
 
-Novas rotas devem:
+New routes must:
 
-- usar um prefixo específico do projeto;
-- validar entradas recebidas;
-- evitar exposição de caminhos arbitrários;
-- retornar erros estruturados e sem dados sensíveis.
+- use a project-specific prefix;
+- validate received inputs;
+- prevent exposure of arbitrary paths;
+- return structured errors without sensitive data.
 
 ### `web/`
 
-Contém extensões JavaScript carregadas pelo ComfyUI para comportamentos que não podem ser expressos apenas no backend, incluindo widgets dinâmicos, pré-visualizações e controles de adição ou remoção.
+Contains JavaScript extensions loaded by ComfyUI for behavior that cannot be expressed only in the backend, including dynamic widgets, previews, and add/remove controls.
 
-O JavaScript deve localizar nós pelos IDs registrados no backend, não apenas pelos nomes exibidos.
+JavaScript must locate nodes by the IDs registered in the backend, not only by display names.
 
 ### `tests/`
 
-Contém testes unitários das regras e dos adaptadores. Integrações com módulos do ComfyUI devem ser simuladas quando o teste puder ser executado fora de uma instalação completa.
+Contains unit tests for rules and adapters. Integrations with ComfyUI modules should be mocked when the test can run outside a complete installation.
 
-## Fluxo de carregamento
+## Loading flow
 
-1. O ComfyUI encontra a pasta em `custom_nodes/`.
-2. O `__init__.py` raiz é importado.
-3. O registro em `nodes/__init__.py` disponibiliza as classes.
-4. As rotas são registradas.
-5. O diretório `web/` é informado ao frontend.
-6. O ComfyUI constrói os nós e carrega as extensões JavaScript correspondentes.
+1. ComfyUI discovers the directory under `custom_nodes/`.
+2. The root `__init__.py` is imported.
+3. The registry in `nodes/__init__.py` exposes the node classes.
+4. Routes are registered.
+5. The `web/` directory is exposed to the frontend.
+6. ComfyUI constructs the nodes and loads the corresponding JavaScript extensions.
 
-## Regras de dependência
+## Dependency rules
 
-- `nodes/` pode depender de `services/`.
-- `routes/` pode depender de `services/`.
-- `services/` não deve depender de `nodes/`, `routes/` ou `web/`.
-- `web/` comunica-se com o backend por contratos públicos e endpoints locais.
-- O ponto de entrada raiz depende apenas dos registros centrais.
+- `nodes/` may depend on `services/`.
+- `routes/` may depend on `services/`.
+- `services/` must not depend on `nodes/`, `routes/`, or `web/`.
+- `web/` communicates with the backend through public contracts and local endpoints.
+- The root entry point depends only on central registries.
 
-## Compatibilidade
+## Compatibility
 
-Ao modificar um nó existente, preserve sempre que possível:
+When modifying an existing node, preserve whenever possible:
 
-- ID em `NODE_CLASS_MAPPINGS`;
-- nomes e tipos de entradas;
-- nomes e tipos de saídas;
-- ordem das saídas;
-- valores serializados pelos widgets;
-- nomes de endpoints consumidos pelo frontend.
+- the ID in `NODE_CLASS_MAPPINGS`;
+- input names and types;
+- output names and types;
+- output order;
+- values serialized by widgets;
+- endpoint names consumed by the frontend.
 
-Mudanças incompatíveis devem ser documentadas no `CHANGELOG.md` e acompanhadas de uma estratégia de migração para workflows existentes.
+Incompatible changes must be documented in `CHANGELOG.md` and accompanied by a migration strategy for existing workflows.

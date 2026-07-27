@@ -1,17 +1,19 @@
-# Guia de desenvolvimento
+**Languages:** [English](DEVELOPMENT.md) · [Português (Brasil)](lang/pt-BR/DEVELOPMENT.md) · [Español](lang/es/DEVELOPMENT.md)
 
-## Pré-requisitos
+# Development Guide
+
+## Prerequisites
 
 - Git.
-- Uma instalação funcional do ComfyUI.
-- A versão do Python suportada pela instalação do ComfyUI.
-- Ambiente com as dependências do próprio ComfyUI disponíveis para testes de integração.
+- A working ComfyUI installation.
+- A Python version supported by the ComfyUI installation.
+- An environment with ComfyUI's own dependencies available for integration tests.
 
-O projeto não declara dependências obrigatórias adicionais de runtime. Os nós compostos reutilizam classes e recursos fornecidos pelo ComfyUI.
+The project does not declare additional mandatory runtime dependencies. Composite nodes reuse classes and resources provided by ComfyUI.
 
-## Preparação do ambiente
+## Environment setup
 
-Clone o repositório dentro de `custom_nodes/`:
+Clone the repository under `custom_nodes/`:
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -19,43 +21,43 @@ git clone https://github.com/jadervasque/ComyUI-Diztraido.git
 cd ComyUI-Diztraido
 ```
 
-Para trabalhar em uma branch:
+To work on a branch:
 
 ```bash
-git switch -c tipo/descricao-curta
+git switch -c type/short-description
 ```
 
-Prefixos recomendados:
+Recommended prefixes:
 
-- `feat/` para funcionalidades;
-- `fix/` para correções;
-- `docs/` para documentação;
-- `refactor/` para reorganizações internas;
-- `chore/` para manutenção.
+- `feat/` for features;
+- `fix/` for fixes;
+- `docs/` for documentation;
+- `refactor/` for internal reorganizations;
+- `chore/` for maintenance.
 
-## Testes
+## Tests
 
-Em um ambiente isolado, instale as dependências usadas pela suíte:
+In an isolated environment, install the dependencies used by the test suite:
 
 ```bash
 python -m pip install -r requirements-test.txt
 ```
 
-O Pillow é importado pelos testes de metadados e normalmente já está disponível no ambiente do ComfyUI.
+Pillow is imported by the metadata tests and is normally already available in the ComfyUI environment.
 
-Execute a suíte padrão:
+Run the standard suite:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Valide também a compilação dos módulos:
+Also validate module compilation:
 
 ```bash
 python -m compileall -q .
 ```
 
-Ferramentas opcionais configuradas em `pyproject.toml`:
+Optional tools configured in `pyproject.toml`:
 
 ```bash
 python -m pip install ruff pytest coverage
@@ -66,71 +68,74 @@ coverage run -m unittest discover -s tests
 coverage report
 ```
 
-A integração contínua instala `requirements-test.txt` e executa compilação e testes unitários em múltiplas versões do Python.
+Continuous integration installs `requirements-test.txt` and runs compilation and unit tests on multiple Python versions.
 
-## Convenções de código
+## Code conventions
 
 ### Python
 
-- Use quatro espaços para indentação.
-- Prefira type hints em funções reutilizáveis.
-- Mantenha docstrings curtas e objetivas.
-- Coloque um nó por arquivo em `nodes/`.
-- Extraia regras reutilizáveis para `services/`.
-- Evite importar módulos pesados do ComfyUI no nível global quando isso impedir testes isolados.
-- Preserve IDs, entradas e saídas dos nós existentes.
+- Use four spaces for indentation.
+- Prefer type hints in reusable functions.
+- Keep docstrings concise and objective.
+- Place one node per file in `nodes/`.
+- Extract reusable rules into `services/`.
+- Avoid importing heavy ComfyUI modules at global scope when doing so prevents isolated tests.
+- Preserve the IDs, inputs, and outputs of existing nodes.
 
 ### JavaScript
 
-- Use dois espaços para indentação.
-- Registre extensões com nomes exclusivos.
-- Localize o nó pelo ID de classe do backend.
-- Preserve callbacks originais ao estender widgets.
-- Evite estado global e propriedades com nomes genéricos no objeto do nó.
+- Use two spaces for indentation.
+- Register extensions with unique names.
+- Locate nodes by the backend class ID.
+- Preserve original callbacks when extending widgets.
+- Avoid global state and generically named properties on node objects.
 
-### Documentação
+### Documentation
 
-- Atualize `docs/NODES.md` ao criar ou alterar um nó.
-- Atualize `README.md` quando houver mudança no processo de instalação ou no escopo do projeto.
-- Registre mudanças relevantes em `CHANGELOG.md`.
+- English files are canonical.
+- Update `docs/NODES.md` when creating or changing a node.
+- Update `README.md` when installation or project scope changes.
+- Record relevant changes in `CHANGELOG.md`.
+- Keep the Brazilian Portuguese files in `docs/lang/pt-BR/` and the Spanish files in `docs/lang/es/` synchronized with the English documentation.
+- Preserve the language-navigation header in every public documentation file.
 
-## Como adicionar um nó
+## Adding a node
 
-1. Crie `nodes/meu_no.py`.
-2. Defina uma classe compatível com o protocolo de nós do ComfyUI.
-3. Coloque regras reutilizáveis em `services/`.
-4. Importe a classe em `nodes/__init__.py`.
-5. Registre um ID estável em `NODE_CLASS_MAPPINGS`.
-6. Registre o rótulo em `NODE_DISPLAY_NAME_MAPPINGS`.
-7. Adicione uma extensão em `web/` apenas quando necessário.
-8. Adicione testes em `tests/`.
-9. Documente o nó em `docs/NODES.md`.
+1. Create `nodes/my_node.py`.
+2. Define a class compatible with the ComfyUI node protocol.
+3. Place reusable rules in `services/`.
+4. Import the class in `nodes/__init__.py`.
+5. Register a stable ID in `NODE_CLASS_MAPPINGS`.
+6. Register the label in `NODE_DISPLAY_NAME_MAPPINGS`.
+7. Add an extension under `web/` only when necessary.
+8. Add tests under `tests/`.
+9. Document the node in all three versions of the node catalog.
 
-## Como adicionar uma rota
+## Adding a route
 
-1. Implemente a rota em um módulo de `routes/`.
-2. Mantenha regras de negócio em `services/`.
-3. Exponha uma função de registro idempotente.
-4. Chame essa função em `routes/__init__.py`.
-5. Valide entradas e trate erros esperados.
-6. Adicione testes para parsing, validação e respostas.
+1. Implement the route in a module under `routes/`.
+2. Keep business rules in `services/`.
+3. Expose an idempotent registration function.
+4. Call that function from `routes/__init__.py`.
+5. Validate inputs and handle expected errors.
+6. Add tests for parsing, validation, and responses.
 
-## Validação no ComfyUI
+## Validation in ComfyUI
 
-Além dos testes unitários:
+In addition to unit tests:
 
-1. Reinicie o ComfyUI.
-2. Confirme que não há erros de importação no terminal.
-3. Verifique se os nós aparecem nas categorias esperadas.
-4. Carregue um workflow existente para detectar incompatibilidades.
-5. Teste widgets dinâmicos após salvar e reabrir o workflow.
-6. Use uma porta diferente de `8188` em instâncias secundárias de validação.
+1. Restart ComfyUI.
+2. Confirm that the terminal shows no import errors.
+3. Verify that nodes appear under the expected categories.
+4. Load an existing workflow to detect incompatibilities.
+5. Test dynamic widgets after saving and reopening the workflow.
+6. Use a port other than `8188` for secondary validation instances.
 
-## Checklist antes do pull request
+## Checklist before a pull request
 
-- Testes novos ou atualizados.
-- Compilação concluída sem erro.
-- Sem IDs públicos alterados acidentalmente.
-- Documentação atualizada.
-- `CHANGELOG.md` atualizado quando aplicável.
-- Sem caches, modelos, imagens de entrada ou saídas versionados.
+- New or updated tests.
+- Compilation completed without errors.
+- No public IDs changed accidentally.
+- English, Brazilian Portuguese, and Spanish documentation updated.
+- `CHANGELOG.md` updated when applicable.
+- No caches, models, input images, or outputs committed.

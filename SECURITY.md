@@ -1,61 +1,63 @@
-# Política de segurança
+**Languages:** [English](SECURITY.md) · [Português (Brasil)](docs/lang/pt-BR/SECURITY.md) · [Español](docs/lang/es/SECURITY.md)
 
-## Versões suportadas
+# Security Policy
 
-Este projeto está em desenvolvimento contínuo. Correções de segurança são direcionadas à versão mais recente da branch `master`.
+## Supported versions
 
-| Versão | Suporte |
+This project is under continuous development. Security fixes target the latest version of the `master` branch.
+
+| Version | Supported |
 |---|---|
-| `master` / não lançada | Sim |
-| Commits antigos e forks | Não garantido |
+| `master` / unreleased | Yes |
+| Older commits and forks | Not guaranteed |
 
-## Como relatar uma vulnerabilidade
+## Reporting a vulnerability
 
-Não abra uma issue pública para vulnerabilidades ainda não corrigidas.
+Do not open a public issue for an unpatched vulnerability.
 
-Use, nesta ordem:
+Use the following options in this order:
 
-1. O recurso **Report a vulnerability** na aba **Security** do repositório, quando disponível.
-2. Um contato privado associado ao perfil do mantenedor no GitHub.
+1. The **Report a vulnerability** feature in the repository's **Security** tab, when available.
+2. A private contact method associated with the maintainer's GitHub profile.
 
-Inclua:
+Include:
 
-- descrição e impacto potencial;
-- componente e versões afetadas;
-- passos mínimos para reprodução;
-- prova de conceito segura, quando necessária;
-- sugestões de mitigação;
-- informações sobre eventual divulgação prévia.
+- a description and potential impact;
+- the affected component and versions;
+- minimal reproduction steps;
+- a safe proof of concept when necessary;
+- suggested mitigations;
+- information about any prior disclosure.
 
-Não inclua dados pessoais, credenciais, imagens privadas, modelos protegidos ou conteúdo de terceiros sem autorização.
+Do not include personal data, credentials, private images, protected models, or third-party content without authorization.
 
-## Processo esperado
+## Expected process
 
-O mantenedor buscará:
+The maintainer will seek to:
 
-- confirmar o recebimento;
-- reproduzir e classificar o problema;
-- preparar uma correção ou mitigação;
-- coordenar a divulgação após a disponibilização da correção.
+- confirm receipt;
+- reproduce and classify the issue;
+- prepare a fix or mitigation;
+- coordinate disclosure after the fix is available.
 
-Prazos dependem da gravidade, reprodutibilidade e disponibilidade de manutenção. O envio de um relato não garante recompensa financeira.
+Timelines depend on severity, reproducibility, and maintainer availability. Submitting a report does not guarantee a financial reward.
 
-## Escopo prioritário
+## Priority scope
 
-São especialmente relevantes:
+Particularly relevant reports include:
 
-- leitura arbitrária de arquivos;
-- exposição de caminhos, metadados ou dados locais;
-- execução de código ou comandos não autorizados;
-- injeção em rotas HTTP locais;
-- manipulação insegura de nomes de arquivos enviados;
-- vulnerabilidades introduzidas por extensões JavaScript;
-- vazamento de informações por logs ou respostas de erro.
+- arbitrary file reads;
+- exposure of paths, metadata, or local data;
+- unauthorized code or command execution;
+- injection into local HTTP routes;
+- unsafe handling of uploaded filenames;
+- vulnerabilities introduced by JavaScript extensions;
+- information leakage through logs or error responses.
 
-## Boas práticas para usuários
+## Security practices for users
 
-- Execute o ComfyUI apenas em ambientes confiáveis.
-- Evite expor a interface diretamente à internet sem autenticação e proteção de rede.
-- Revise custom nodes antes de instalá-los.
-- Mantenha o ComfyUI e suas extensões atualizados.
-- Não compartilhe workflows que contenham caminhos, prompts ou metadados sensíveis sem revisão.
+- Run ComfyUI only in trusted environments.
+- Avoid exposing the interface directly to the internet without authentication and network protection.
+- Review custom nodes before installing them.
+- Keep ComfyUI and its extensions updated.
+- Review workflows before sharing them to remove sensitive paths, prompts, or metadata.
