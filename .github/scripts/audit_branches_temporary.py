@@ -4,6 +4,7 @@ import json
 import os
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 repository = os.environ["GH_REPOSITORY"]
 token = os.environ["GH_TOKEN"]
@@ -35,24 +36,21 @@ while True:
 open_pulls = get_json(
     f"https://api.github.com/repos/{repository}/pulls?state=open&per_page=100"
 )
-print(
-    "OPEN_PRS="
-    + json.dumps(
-        [
-            {
-                "number": pr.get("number"),
-                "title": pr.get("title"),
-                "head": pr.get("head", {}).get("ref"),
-                "base": pr.get("base", {}).get("ref"),
-                "draft": pr.get("draft"),
-            }
-            for pr in open_pulls
-        ],
-        ensure_ascii=False,
-        separators=(",", ":"),
-    )
-)
-print(f"BRANCH_COUNT={len(branches)}")
+report = {
+    "repository": repository,
+    "open_pull_requests": [
+        {
+            "number": pr.get("number"),
+            "title": pr.get("title"),
+            "head": pr.get("head", {}).get("ref"),
+            "base": pr.get("base", {}).get("ref"),
+            "draft": pr.get("draft"),
+            "html_url": pr.get("html_url"),
+        }
+        for pr in open_pulls
+    ],
+    "branches": [],
+}
 
 for branch in sorted(branches, key=lambda item: item["name"].lower()):
     name = branch["name"]
@@ -70,10 +68,30 @@ for branch in sorted(branches, key=lambda item: item["name"].lower()):
             "status": compare.get("status"),
             "ahead": compare.get("ahead_by"),
             "behind": compare.get("behind_by"),
-            "files": [item.get("filename") for item in compare.get("files", [])],
+            "files": [
+                {
+                    "filename": item.get("filename"),
+                    "status": item.get("status"),
+                    "additions": item.get("additions"),
+                    "deletions": item.get("deletions"),
+                }
+                for item in compare.get("files", [])
+            ],
             "commits": [
-                item.get("commit", {}).get("message", "").splitlines()[0]
+                {
+                    "sha": item.get("sha"),
+                    "message": item.get("commit", {}).get("message", "").splitlines()[0],
+                }
                 for item in compare.get("commits", [])
             ],
         }
-    print("BRANCH=" + json.dumps(result, ensure_ascii=False, separators=(",", ":")))
+    report["branches"].append(result)
+
+Path("branch-audit.json").write_text(
+    json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+    encoding="utf-8",
+)
+print(
+    f"Audited {len(report['branches'])} branches and "
+    f"{len(report['open_pull_requests'])} open pull requests."
+)
