@@ -1,0 +1,67 @@
+name: Solicitar uma funcionalidade
+description: Proponha uma melhoria ou novo nó para o projeto.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+      description: Explique o problema do usuário antes de descrever a solução.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Solução proposta
+      description: Descreva o comportamento esperado e o fluxo de uso.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área principal
+      options:
+        - Novo nó
+        - Nó existente
+        - Serviço interno
+        - Rota HTTP
+        - Extensão JavaScript
+        - Documentação
+        - Testes ou automação
+        - Outra
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Impacto de compatibilidade
+      description: Informe possíveis mudanças em IDs, entradas, saídas, widgets, rotas ou workflows salvos.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Liste soluções temporárias, nós nativos ou outras extensões já avaliadas.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Adicione exemplos, diagramas ou referências técnicas pertinentes.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmações
+      options:
+        - label: Pesquisei issues existentes e não encontrei uma proposta equivalente.
+          required: true
+        - label: A proposta preserva workflows existentes ou descreve uma migração.
+          required: true
