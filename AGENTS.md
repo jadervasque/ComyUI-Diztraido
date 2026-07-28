@@ -15,6 +15,13 @@
 - Não renomeie endpoints consumidos pelo frontend sem migração coordenada.
 - Documente mudanças incompatíveis no `CHANGELOG.md` e forneça uma estratégia de migração.
 
+## Idioma
+
+- Toda a aplicação deve usar inglês, incluindo nomes e descrições de nós, widgets, botões, menus, rótulos, previews, mensagens de status, avisos, alertas, erros, exceções e qualquer outro texto visível ao usuário.
+- Não adicione textos de interface em português ou espanhol, mesmo quando o código, os comentários internos ou a solicitação original estiverem nesses idiomas.
+- A documentação pública é a única parte multilíngue do projeto e deve ser mantida em inglês, português do Brasil e espanhol nas estruturas de tradução já existentes.
+- O inglês é a versão canônica da documentação. As versões em português e espanhol devem permanecer semanticamente sincronizadas com ela.
+
 ## Qualidade
 
 - Use tipagem, docstrings curtas e nomes claros.
@@ -47,3 +54,4 @@ Valide no ComfyUI quando houver alteração em nós, rotas ou JavaScript. Em ins
 - Atualize `docs/DEVELOPMENT.md` ao alterar o processo de desenvolvimento.
 - Atualize `README.md` quando houver mudanças de instalação, escopo ou uso.
 - Registre alterações relevantes em `CHANGELOG.md`.
+- Ao alterar documentação pública, atualize a versão canônica em inglês e sincronize as traduções em português do Brasil e espanhol.
