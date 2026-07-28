@@ -89,7 +89,7 @@ function renderReferencesPreview(previewRoot, count, referenceWidgets) {
     const activeCount = clampCount(count);
     if (!activeCount) {
         const empty = document.createElement("div");
-        empty.textContent = "Nenhuma referencia ativa.";
+        empty.textContent = "No active references.";
         empty.style.opacity = "0.7";
         empty.style.fontSize = "12px";
         previewRoot.appendChild(empty);
@@ -138,7 +138,7 @@ function renderReferencesPreview(previewRoot, count, referenceWidgets) {
 
     if (!previewRoot.childElementCount) {
         const empty = document.createElement("div");
-        empty.textContent = "Selecione uma imagem nas referencias ativas.";
+        empty.textContent = "Select an image for each active reference.";
         empty.style.opacity = "0.7";
         empty.style.fontSize = "12px";
         previewRoot.appendChild(empty);
