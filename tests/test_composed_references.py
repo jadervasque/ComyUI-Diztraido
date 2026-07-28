@@ -18,13 +18,6 @@ class _ClipTextEncodeNode:
         return (f"cond({clip}|{text})",)
 
 
-class _FluxGuidanceNode:
-    FUNCTION = "apply"
-
-    def apply(self, conditioning, guidance):
-        return (f"g({conditioning},{guidance})",)
-
-
 class _ReferenceLatentNode:
     FUNCTION = "apply"
 
@@ -49,26 +42,6 @@ class _VAEEncodeNode:
 def _factory(name):
     return {
         "CLIPTextEncode": _ClipTextEncodeNode,
-        "FluxGuidance": _FluxGuidanceNode,
-        "ReferenceLatent": _ReferenceLatentNode,
-        "LoadImage": _LoadImageNode,
-        "VAEEncode": _VAEEncodeNode,
-    }[name]()
-
-
-class _FluxGuidanceVarKwNode:
-    FUNCTION = "execute"
-
-    def execute(self, *args, **kwargs):
-        conditioning = kwargs["conditioning"]
-        guidance = kwargs["guidance"]
-        return (f"g({conditioning},{guidance})",)
-
-
-def _factory_varkw(name):
-    return {
-        "CLIPTextEncode": _ClipTextEncodeNode,
-        "FluxGuidance": _FluxGuidanceVarKwNode,
         "ReferenceLatent": _ReferenceLatentNode,
         "LoadImage": _LoadImageNode,
         "VAEEncode": _VAEEncodeNode,
@@ -81,64 +54,52 @@ class ComposedReferencesTests(unittest.TestCase):
         nested = [conditioning]
         self.assertEqual(normalize_conditioning(nested), conditioning)
 
-    def test_builds_conditioning_from_clip_and_prompt(self):
-        result = build_reference_conditioning_from_prompt(
+    def test_builds_positive_and_blank_negative_from_clip(self):
+        positive, blank_negative = build_reference_conditioning_from_prompt(
             clip="clip0",
             text_prompt="a portrait",
             vae="vae0",
-            guidance=3,
             reference_count=0,
             node_factory=_factory,
         )
-        self.assertEqual(result, "g(cond(clip0|a portrait),3.0)")
+        self.assertEqual(positive, "cond(clip0|a portrait)")
+        self.assertEqual(blank_negative, "cond(clip0|)")
 
-    def test_returns_guidance_only_when_no_references(self):
+    def test_returns_conditioning_unchanged_when_no_references(self):
         result = build_reference_conditioning(
             conditioning="c0",
             vae="vae0",
-            guidance=4,
             reference_count=0,
             node_factory=_factory,
         )
-        self.assertEqual(result, "g(c0,4.0)")
-
-    def test_supports_nodes_wrapped_with_variadic_kwargs_signature(self):
-        result = build_reference_conditioning(
-            conditioning="c0",
-            vae="vae0",
-            guidance=4,
-            reference_count=0,
-            node_factory=_factory_varkw,
-        )
-        self.assertEqual(result, "g(c0,4.0)")
+        self.assertEqual(result, "c0")
 
     def test_accepts_nested_conditioning_when_no_references(self):
         nested_conditioning = [["embed", {"p": 1}]]
         result = build_reference_conditioning(
             conditioning=[nested_conditioning],
             vae="vae0",
-            guidance=4,
             reference_count=0,
             node_factory=_factory,
         )
-        self.assertEqual(result, "g([['embed', {'p': 1}]],4.0)")
+        self.assertEqual(result, nested_conditioning)
 
-    def test_chains_initial_latent_and_all_active_references(self):
-        result = build_reference_conditioning(
-            conditioning="c0",
+    def test_chains_all_active_references_in_positive_only(self):
+        positive, blank_negative = build_reference_conditioning_from_prompt(
+            clip="clip0",
+            text_prompt="a portrait",
             vae="vae0",
-            guidance=4,
             reference_count=3,
-            initial_latent="l0",
             image_ref_1="ref_a.png",
             image_ref_2="ref_b.png",
             image_ref_3="",
             node_factory=_factory,
         )
         self.assertEqual(
-            result,
-            "r(r(r(g(c0,4.0),l0),latent(img(ref_a.png)|vae0)),latent(img(ref_b.png)|vae0))",
+            positive,
+            "r(r(cond(clip0|a portrait),latent(img(ref_a.png)|vae0)),latent(img(ref_b.png)|vae0))",
         )
+        self.assertEqual(blank_negative, "cond(clip0|)")
 
 
 if __name__ == "__main__":
