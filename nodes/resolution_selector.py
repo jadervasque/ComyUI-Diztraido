@@ -1,18 +1,11 @@
-"""Extended resolution selector and reusable resolution configuration helpers."""
+"""Seletor de resolucao com proporcoes estendidas e modo personalizado."""
 
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
 from typing import Any
 
 CUSTOM_ASPECT_RATIO = "Custom"
-RESOLUTION_TYPE = "DIZTRAIDO_RESOLUTION"
-DEFAULT_ASPECT_RATIO = "1:1 (Square)"
-DEFAULT_MEGAPIXELS = 1.0
-DEFAULT_MULTIPLE = 8
-DEFAULT_WIDTH = 1024
-DEFAULT_HEIGHT = 1024
 
 ASPECT_RATIOS: dict[str, tuple[int, int]] = {
     "1:1 (Square)": (1, 1),
@@ -49,91 +42,44 @@ def _clamp_int(value: Any, default: int, minimum: int, maximum: int) -> int:
     return max(minimum, min(parsed, maximum))
 
 
-def _clamp_float(value: Any, default: float, minimum: float, maximum: float) -> float:
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError):
-        return default
-    return max(minimum, min(parsed, maximum))
-
-
-def build_resolution_config(
-    aspect_ratio: Any = DEFAULT_ASPECT_RATIO,
-    megapixels: Any = DEFAULT_MEGAPIXELS,
-    multiple: Any = DEFAULT_MULTIPLE,
-    width: Any = DEFAULT_WIDTH,
-    height: Any = DEFAULT_HEIGHT,
-) -> dict[str, Any]:
-    """Build a normalized configuration accepted by resolution-aware nodes."""
-    normalized_ratio = str(aspect_ratio or DEFAULT_ASPECT_RATIO)
-    if normalized_ratio not in ASPECT_RATIO_OPTIONS:
-        normalized_ratio = DEFAULT_ASPECT_RATIO
-
-    return {
-        "aspect_ratio": normalized_ratio,
-        "megapixels": _clamp_float(megapixels, DEFAULT_MEGAPIXELS, 0.1, 16.0),
-        "multiple": _clamp_int(multiple, DEFAULT_MULTIPLE, 8, 128),
-        "width": _clamp_int(width, DEFAULT_WIDTH, 8, 16384),
-        "height": _clamp_int(height, DEFAULT_HEIGHT, 8, 16384),
-    }
-
-
-def normalize_resolution_config(
-    resolution: Any,
-    fallback: Mapping[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Normalize a resolution object while preserving a caller-provided fallback."""
-    base = dict(fallback or build_resolution_config())
-    if not isinstance(resolution, Mapping):
-        return build_resolution_config(**base)
-
-    return build_resolution_config(
-        aspect_ratio=resolution.get("aspect_ratio", base.get("aspect_ratio")),
-        megapixels=resolution.get("megapixels", base.get("megapixels")),
-        multiple=resolution.get("multiple", base.get("multiple")),
-        width=resolution.get("width", base.get("width")),
-        height=resolution.get("height", base.get("height")),
-    )
-
-
 def resolve_resolution(
     aspect_ratio: str,
     megapixels: float,
     multiple: int,
-    width: int = DEFAULT_WIDTH,
-    height: int = DEFAULT_HEIGHT,
-    resolution: Any | None = None,
+    width: int = 1024,
+    height: int = 1024,
 ) -> tuple[int, int]:
-    """Resolve dimensions from local widgets or a connected resolution object."""
-    config = build_resolution_config(aspect_ratio, megapixels, multiple, width, height)
-    if resolution is not None:
-        config = normalize_resolution_config(resolution, fallback=config)
+    """Resolve dimensoes por megapixels ou usa dimensoes diretas no modo Custom."""
+    if aspect_ratio == CUSTOM_ASPECT_RATIO:
+        return (
+            _clamp_int(width, default=1024, minimum=8, maximum=16384),
+            _clamp_int(height, default=1024, minimum=8, maximum=16384),
+        )
 
-    if config["aspect_ratio"] == CUSTOM_ASPECT_RATIO:
-        return config["width"], config["height"]
+    if aspect_ratio not in ASPECT_RATIOS:
+        aspect_ratio = "1:1 (Square)"
 
-    width_ratio, height_ratio = ASPECT_RATIOS[config["aspect_ratio"]]
-    total_pixels = config["megapixels"] * 1024 * 1024
+    width_ratio, height_ratio = ASPECT_RATIOS[aspect_ratio]
+    try:
+        target_megapixels = float(megapixels)
+    except (TypeError, ValueError):
+        target_megapixels = 1.0
+    target_megapixels = max(0.1, min(target_megapixels, 16.0))
+    target_multiple = _clamp_int(multiple, default=8, minimum=8, maximum=128)
+    total_pixels = target_megapixels * 1024 * 1024
     scale = math.sqrt(total_pixels / (width_ratio * height_ratio))
-    target_multiple = config["multiple"]
-    resolved_width = max(
-        target_multiple,
-        round(width_ratio * scale / target_multiple) * target_multiple,
-    )
-    resolved_height = max(
-        target_multiple,
-        round(height_ratio * scale / target_multiple) * target_multiple,
-    )
+    resolved_width = max(target_multiple, round(width_ratio * scale / target_multiple) * target_multiple)
+    resolved_height = max(target_multiple, round(height_ratio * scale / target_multiple) * target_multiple)
     return resolved_width, resolved_height
 
 
 class DiztraidoResolutionSelector:
-    """Resolve width and height from widgets or a connected resolution object."""
+    """Calcula largura e altura por proporcao/megapixels ou medidas diretas."""
 
     CATEGORY = "Diztraido/utils"
     DESCRIPTION = (
-        "Calculate width and height from an aspect ratio and megapixel target, "
-        "enter exact dimensions in Custom mode, or consume a connected resolution."
+        "Calculate width and height from aspect ratio and megapixel target, "
+        "or enter exact dimensions in Custom mode."
     )
     RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("width", "height")
@@ -143,26 +89,23 @@ class DiztraidoResolutionSelector:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "aspect_ratio": (ASPECT_RATIO_OPTIONS, {"default": DEFAULT_ASPECT_RATIO}),
+                "aspect_ratio": (ASPECT_RATIO_OPTIONS, {"default": "1:1 (Square)"}),
                 "megapixels": (
                     "FLOAT",
-                    {"default": DEFAULT_MEGAPIXELS, "min": 0.1, "max": 16.0, "step": 0.1},
+                    {"default": 1.0, "min": 0.1, "max": 16.0, "step": 0.1},
                 ),
                 "multiple": (
                     "INT",
-                    {"default": DEFAULT_MULTIPLE, "min": 8, "max": 128, "step": 4, "advanced": True},
+                    {"default": 8, "min": 8, "max": 128, "step": 4, "advanced": True},
                 ),
                 "width": (
                     "INT",
-                    {"default": DEFAULT_WIDTH, "min": 8, "max": 16384, "step": 8},
+                    {"default": 1024, "min": 8, "max": 16384, "step": 8},
                 ),
                 "height": (
                     "INT",
-                    {"default": DEFAULT_HEIGHT, "min": 8, "max": 16384, "step": 8},
+                    {"default": 1024, "min": 8, "max": 16384, "step": 8},
                 ),
-            },
-            "optional": {
-                "resolution": (RESOLUTION_TYPE,),
             },
         }
 
@@ -172,15 +115,7 @@ class DiztraidoResolutionSelector:
         aspect_ratio: str,
         megapixels: float,
         multiple: int,
-        width: int = DEFAULT_WIDTH,
-        height: int = DEFAULT_HEIGHT,
-        resolution: Any | None = None,
+        width: int = 1024,
+        height: int = 1024,
     ):
-        return resolve_resolution(
-            aspect_ratio,
-            megapixels,
-            multiple,
-            width,
-            height,
-            resolution=resolution,
-        )
+        return resolve_resolution(aspect_ratio, megapixels, multiple, width, height)
