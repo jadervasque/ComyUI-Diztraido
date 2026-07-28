@@ -1,4 +1,4 @@
-"""No composto para encadear multiplas referencias com guidance embutido."""
+"""No composto para codificar prompt e encadear referencias FLUX.2."""
 
 from __future__ import annotations
 
@@ -10,11 +10,11 @@ from ..services.composed_pipelines import MAX_REFERENCES, build_reference_condit
 
 
 class DiztraidoReferenceChain:
-    """Aplica FluxGuidance + cadeia de ReferenceLatent em um unico no."""
+    """Codifica positivo, adiciona ReferenceLatent e gera negativo vazio."""
 
     CATEGORY = "Diztraido/flux"
-    RETURN_TYPES = ("CONDITIONING", "VAE")
-    RETURN_NAMES = ("conditioning", "vae")
+    RETURN_TYPES = ("CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("positive", "blank_negative")
     FUNCTION = "apply_references"
 
     @staticmethod
@@ -33,29 +33,21 @@ class DiztraidoReferenceChain:
         image_options = cls._image_options()
         required = {
             "clip": ("CLIP",),
-            "text_prompt": ("STRING", {"default": "", "multiline": True}),
             "vae": ("VAE",),
-            "guidance": ("FLOAT", {"default": 4.0, "min": 0.0, "max": 100.0, "step": 0.1}),
+            "text_prompt": ("STRING", {"default": "", "multiline": True}),
             "reference_count": ("INT", {"default": 0, "min": 0, "max": MAX_REFERENCES}),
         }
         for index in range(1, MAX_REFERENCES + 1):
             required[f"image_ref_{index}"] = image_options
 
-        return {
-            "required": required,
-            "optional": {
-                "initial_latent": ("LATENT",),
-            },
-        }
+        return {"required": required}
 
-    def apply_references(self, clip, text_prompt, vae, guidance, reference_count, initial_latent=None, **kwargs):
-        result = build_reference_conditioning_from_prompt(
-            clip,
-            text_prompt,
-            vae,
-            guidance,
-            reference_count,
-            initial_latent=initial_latent,
+    def apply_references(self, clip, vae, text_prompt, reference_count, **kwargs):
+        positive, blank_negative = build_reference_conditioning_from_prompt(
+            clip=clip,
+            text_prompt=text_prompt,
+            vae=vae,
+            reference_count=reference_count,
             **kwargs,
         )
-        return result, vae
+        return positive, blank_negative
