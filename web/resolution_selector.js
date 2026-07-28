@@ -108,22 +108,30 @@ function configureResolutionWidgets(node) {
     });
 
     const refresh = () => {
+        const resolutionInput = node.inputs?.find((input) => input.name === "resolution");
+        const connectedResolution = resolutionInput?.link != null;
         const customMode = aspectRatioWidget.value === CUSTOM_ASPECT_RATIO;
-        setWidgetVisible(megapixelsWidget, !customMode);
-        setWidgetVisible(multipleWidget, !customMode);
-        setWidgetVisible(widthWidget, customMode);
-        setWidgetVisible(heightWidget, customMode);
 
-        const resolution = calculateResolution(
-            aspectRatioWidget.value,
-            megapixelsWidget.value,
-            multipleWidget.value,
-            widthWidget.value,
-            heightWidget.value,
-        );
-        previewWidget.value = resolution
-            ? `Output: ${resolution[0]} × ${resolution[1]} px`
-            : "Output: unavailable";
+        setWidgetVisible(aspectRatioWidget, !connectedResolution);
+        setWidgetVisible(megapixelsWidget, !connectedResolution && !customMode);
+        setWidgetVisible(multipleWidget, !connectedResolution && !customMode);
+        setWidgetVisible(widthWidget, !connectedResolution && customMode);
+        setWidgetVisible(heightWidget, !connectedResolution && customMode);
+
+        if (connectedResolution) {
+            previewWidget.value = "Output: connected resolution";
+        } else {
+            const resolution = calculateResolution(
+                aspectRatioWidget.value,
+                megapixelsWidget.value,
+                multipleWidget.value,
+                widthWidget.value,
+                heightWidget.value,
+            );
+            previewWidget.value = resolution
+                ? `Output: ${resolution[0]} × ${resolution[1]} px`
+                : "Output: unavailable";
+        }
 
         resizeNodeToWidgets(node);
         node.setDirtyCanvas?.(true, true);
@@ -137,6 +145,13 @@ function configureResolutionWidgets(node) {
             return result;
         };
     }
+
+    const originalConnectionsChange = node.onConnectionsChange;
+    node.onConnectionsChange = function () {
+        const result = originalConnectionsChange?.apply(this, arguments);
+        requestAnimationFrame(refresh);
+        return result;
+    };
 
     node.__diztraidoRefreshResolutionPreview = refresh;
     node.__diztraidoResolutionConfigured = true;

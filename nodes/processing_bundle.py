@@ -1,8 +1,8 @@
-"""No composto para executar o sampler FLUX.2 em uma unica etapa."""
+"""Composite node for running the FLUX.2 sampler in one step."""
 
 from __future__ import annotations
 
-from .resolution_selector import ASPECT_RATIO_OPTIONS, resolve_resolution
+from .resolution_selector import ASPECT_RATIO_OPTIONS, RESOLUTION_TYPE, resolve_resolution
 from ..services.composed_pipelines import run_processing_pipeline
 
 try:
@@ -16,7 +16,7 @@ _MISSING = object()
 
 
 class DiztraidoProcessingBundle:
-    """Agrupa CFG, sampler, Flux2Scheduler, latent e decode opcional."""
+    """Combine CFG, sampling, Flux2 scheduling, latent creation, and optional decode."""
 
     CATEGORY = "Diztraido/flux"
     RETURN_TYPES = ("IMAGE", "LATENT")
@@ -58,11 +58,12 @@ class DiztraidoProcessingBundle:
                     {"default": 1024, "min": 8, "max": 16384, "step": 8},
                 ),
                 "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096}),
-                # Sincronizado automaticamente pelo frontend conforme a saida IMAGE.
+                # The frontend synchronizes this with the IMAGE output connection state.
                 "decode_image": ("BOOLEAN", {"default": True}),
             },
             "optional": {
-                # Lazy evita carregar/processar o VAE quando apenas LATENT esta conectado.
+                "resolution": (RESOLUTION_TYPE,),
+                # Lazy evaluation avoids loading the VAE when only LATENT is connected.
                 "vae": ("VAE", {"lazy": True}),
             },
         }
@@ -88,6 +89,7 @@ class DiztraidoProcessingBundle:
         height,
         batch_size,
         decode_image=True,
+        resolution=None,
         vae=_MISSING,
     ):
         resolved_width, resolved_height = resolve_resolution(
@@ -96,6 +98,7 @@ class DiztraidoProcessingBundle:
             multiple,
             width,
             height,
+            resolution=resolution,
         )
 
         should_decode = bool(decode_image)
