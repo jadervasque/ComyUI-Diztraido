@@ -23,30 +23,30 @@ class _RandomNoiseNode:
         return (f"noise({noise_seed})",)
 
 
-class _BasicGuiderNode:
+class _CFGGuiderNode:
     FUNCTION = "build"
 
-    def build(self, model, conditioning):
-        return (f"guider({model}|{conditioning})",)
+    def build(self, model, positive, negative, cfg):
+        return (f"guider({model}|{positive}|{negative}|{cfg})",)
 
 
-class _BasicGuiderListAwareNode:
+class _CFGGuiderListAwareNode:
     FUNCTION = "build"
 
-    def build(self, model, conditioning):
-        if not isinstance(conditioning, list):
-            raise AssertionError("conditioning deveria permanecer lista")
-        if len(conditioning) < 2 or len(conditioning[0]) != 2:
-            raise AssertionError("conditioning foi truncado ou corrompido")
+    def build(self, model, positive, negative, cfg):
+        if not isinstance(positive, list) or not isinstance(negative, list):
+            raise AssertionError("conditionings deveriam permanecer listas")
+        if len(positive) < 2 or len(positive[0]) != 2:
+            raise AssertionError("positive foi truncado ou corrompido")
         return ("guider-ok",)
 
 
-class _BasicGuiderNodeOutputAwareNode:
+class _CFGGuiderNodeOutputAwareNode:
     FUNCTION = "build"
 
-    def build(self, model, conditioning):
-        if not isinstance(conditioning, list):
-            raise AssertionError("conditioning deveria ter sido extraido do NodeOutput")
+    def build(self, model, positive, negative, cfg):
+        if not isinstance(positive, list):
+            raise AssertionError("positive deveria ter sido extraido do NodeOutput")
         return _NodeOutputLike("guider-node-output-ok")
 
 
@@ -85,40 +85,23 @@ class _VAEDecodeNode:
         return (f"image({samples}|{vae})",)
 
 
-def _factory(name):
-    return {
+def _factory_with_guider(guider_cls, calls=None):
+    mapping = {
         "RandomNoise": _RandomNoiseNode,
-        "BasicGuider": _BasicGuiderNode,
+        "CFGGuider": guider_cls,
         "KSamplerSelect": _KSamplerSelectNode,
         "Flux2Scheduler": _Flux2SchedulerNode,
         "EmptyFlux2LatentImage": _EmptyLatentNode,
         "SamplerCustomAdvanced": _SamplerAdvancedNode,
         "VAEDecode": _VAEDecodeNode,
-    }[name]()
+    }
 
+    def factory(name):
+        if calls is not None:
+            calls.append(name)
+        return mapping[name]()
 
-def _factory_list_aware(name):
-    return {
-        "RandomNoise": _RandomNoiseNode,
-        "BasicGuider": _BasicGuiderListAwareNode,
-        "KSamplerSelect": _KSamplerSelectNode,
-        "Flux2Scheduler": _Flux2SchedulerNode,
-        "EmptyFlux2LatentImage": _EmptyLatentNode,
-        "SamplerCustomAdvanced": _SamplerAdvancedNode,
-        "VAEDecode": _VAEDecodeNode,
-    }[name]()
-
-
-def _factory_node_output_aware(name):
-    return {
-        "RandomNoise": _RandomNoiseNode,
-        "BasicGuider": _BasicGuiderNodeOutputAwareNode,
-        "KSamplerSelect": _KSamplerSelectNode,
-        "Flux2Scheduler": _Flux2SchedulerNode,
-        "EmptyFlux2LatentImage": _EmptyLatentNode,
-        "SamplerCustomAdvanced": _SamplerAdvancedNode,
-        "VAEDecode": _VAEDecodeNode,
-    }[name]()
+    return factory
 
 
 class ComposedProcessingTests(unittest.TestCase):
@@ -127,6 +110,7 @@ class ComposedProcessingTests(unittest.TestCase):
             noise_seed="5",
             sampler_name="",
             steps=0,
+            cfg="4.5",
             width=-1,
             height=99999,
             batch_size="0",
@@ -134,66 +118,91 @@ class ComposedProcessingTests(unittest.TestCase):
         self.assertEqual(params["noise_seed"], 5)
         self.assertEqual(params["sampler_name"], "euler")
         self.assertEqual(params["steps"], 1)
+        self.assertEqual(params["cfg"], 4.5)
         self.assertEqual(params["width"], 8)
         self.assertEqual(params["height"], 16384)
         self.assertEqual(params["batch_size"], 1)
 
-    def test_runs_pipeline_with_expected_call_flow(self):
-        image = run_processing_pipeline(
+    def test_runs_cfg_pipeline_and_returns_image_and_latent(self):
+        image, latent = run_processing_pipeline(
             model="m0",
-            conditioning="c0",
+            positive="p0",
+            negative="n0",
             vae="v0",
             noise_seed=42,
             sampler_name="euler",
-            steps=20,
+            steps=50,
+            cfg=4.0,
             width=1024,
             height=768,
             batch_size=1,
-            node_factory=_factory,
+            node_factory=_factory_with_guider(_CFGGuiderNode),
         )
 
-        self.assertEqual(
-            image,
-            "image(sampled(noise(42)|guider(m0|c0)|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
+        expected_latent = (
+            "sampled(noise(42)|guider(m0|p0|n0|4.0)|sampler(euler)|"
+            "sigmas(50|1024|768)|latent(1024|768|1))"
         )
+        self.assertEqual(latent, expected_latent)
+        self.assertEqual(image, f"image({expected_latent}|v0)")
 
-    def test_preserves_conditioning_list_structure_for_basic_guider(self):
-        conditioning = [["embed", {"a": 1}], ["embed2", {"b": 2}]]
-        image = run_processing_pipeline(
+    def test_skips_vae_decode_when_image_is_not_requested(self):
+        calls = []
+        image, latent = run_processing_pipeline(
             model="m0",
-            conditioning=conditioning,
+            positive="p0",
+            negative="n0",
+            vae=None,
+            noise_seed=42,
+            sampler_name="euler",
+            steps=50,
+            cfg=4.0,
+            width=1024,
+            height=768,
+            batch_size=1,
+            decode_image=False,
+            node_factory=_factory_with_guider(_CFGGuiderNode, calls),
+        )
+        self.assertIsNone(image)
+        self.assertTrue(latent.startswith("sampled("))
+        self.assertNotIn("VAEDecode", calls)
+
+    def test_preserves_conditioning_list_structure_for_cfg_guider(self):
+        positive = [["embed", {"a": 1}], ["embed2", {"b": 2}]]
+        negative = [["neg", {"c": 3}]]
+        image, _ = run_processing_pipeline(
+            model="m0",
+            positive=positive,
+            negative=negative,
             vae="v0",
             noise_seed=42,
             sampler_name="euler",
-            steps=20,
+            steps=50,
+            cfg=4.0,
             width=1024,
             height=768,
             batch_size=1,
-            node_factory=_factory_list_aware,
+            node_factory=_factory_with_guider(_CFGGuiderListAwareNode),
         )
-        self.assertEqual(
-            image,
-            "image(sampled(noise(42)|guider-ok|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
-        )
+        self.assertIn("guider-ok", image)
 
-    def test_extracts_native_node_output_before_basic_guider(self):
-        conditioning = [["embed", {"a": 1}]]
-        image = run_processing_pipeline(
+    def test_extracts_native_node_output_before_cfg_guider(self):
+        positive = [["embed", {"a": 1}]]
+        image, _ = run_processing_pipeline(
             model="m0",
-            conditioning=conditioning,
+            positive=positive,
+            negative=[["neg", {"b": 2}]],
             vae="v0",
             noise_seed=42,
             sampler_name="euler",
-            steps=20,
+            steps=50,
+            cfg=4.0,
             width=1024,
             height=768,
             batch_size=1,
-            node_factory=_factory_node_output_aware,
+            node_factory=_factory_with_guider(_CFGGuiderNodeOutputAwareNode),
         )
-        self.assertEqual(
-            image,
-            "image(sampled(noise(42)|guider-node-output-ok|sampler(euler)|sigmas(20|1024|768)|latent(1024|768|1))|v0)",
-        )
+        self.assertIn("guider-node-output-ok", image)
 
 
 if __name__ == "__main__":

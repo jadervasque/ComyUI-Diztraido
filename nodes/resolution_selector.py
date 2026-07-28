@@ -1,9 +1,11 @@
-"""Seletor de resolucao com proporcoes estendidas."""
+"""Seletor de resolucao com proporcoes estendidas e modo personalizado."""
 
 from __future__ import annotations
 
 import math
+from typing import Any
 
+CUSTOM_ASPECT_RATIO = "Custom"
 
 ASPECT_RATIOS: dict[str, tuple[int, int]] = {
     "1:1 (Square)": (1, 1),
@@ -29,15 +31,55 @@ ASPECT_RATIOS: dict[str, tuple[int, int]] = {
     "7:6 (Compact Landscape)": (7, 6),
     "6:7 (Compact Portrait)": (6, 7),
 }
+ASPECT_RATIO_OPTIONS = [*ASPECT_RATIOS, CUSTOM_ASPECT_RATIO]
+
+
+def _clamp_int(value: Any, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(minimum, min(parsed, maximum))
+
+
+def resolve_resolution(
+    aspect_ratio: str,
+    megapixels: float,
+    multiple: int,
+    width: int = 1024,
+    height: int = 1024,
+) -> tuple[int, int]:
+    """Resolve dimensoes por megapixels ou usa dimensoes diretas no modo Custom."""
+    if aspect_ratio == CUSTOM_ASPECT_RATIO:
+        return (
+            _clamp_int(width, default=1024, minimum=8, maximum=16384),
+            _clamp_int(height, default=1024, minimum=8, maximum=16384),
+        )
+
+    if aspect_ratio not in ASPECT_RATIOS:
+        aspect_ratio = "1:1 (Square)"
+
+    width_ratio, height_ratio = ASPECT_RATIOS[aspect_ratio]
+    try:
+        target_megapixels = float(megapixels)
+    except (TypeError, ValueError):
+        target_megapixels = 1.0
+    target_megapixels = max(0.1, min(target_megapixels, 16.0))
+    target_multiple = _clamp_int(multiple, default=8, minimum=8, maximum=128)
+    total_pixels = target_megapixels * 1024 * 1024
+    scale = math.sqrt(total_pixels / (width_ratio * height_ratio))
+    resolved_width = max(target_multiple, round(width_ratio * scale / target_multiple) * target_multiple)
+    resolved_height = max(target_multiple, round(height_ratio * scale / target_multiple) * target_multiple)
+    return resolved_width, resolved_height
 
 
 class DiztraidoResolutionSelector:
-    """Calcula largura e altura por proporcao e alvo de megapixels."""
+    """Calcula largura e altura por proporcao/megapixels ou medidas diretas."""
 
     CATEGORY = "Diztraido/utils"
     DESCRIPTION = (
         "Calculate width and height from aspect ratio and megapixel target, "
-        "with additional landscape, portrait, and panoramic ratios."
+        "or enter exact dimensions in Custom mode."
     )
     RETURN_TYPES = ("INT", "INT")
     RETURN_NAMES = ("width", "height")
@@ -47,7 +89,7 @@ class DiztraidoResolutionSelector:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "aspect_ratio": (list(ASPECT_RATIOS), {"default": "1:1 (Square)"}),
+                "aspect_ratio": (ASPECT_RATIO_OPTIONS, {"default": "1:1 (Square)"}),
                 "megapixels": (
                     "FLOAT",
                     {"default": 1.0, "min": 0.1, "max": 16.0, "step": 0.1},
@@ -56,14 +98,24 @@ class DiztraidoResolutionSelector:
                     "INT",
                     {"default": 8, "min": 8, "max": 128, "step": 4, "advanced": True},
                 ),
+                "width": (
+                    "INT",
+                    {"default": 1024, "min": 8, "max": 16384, "step": 8},
+                ),
+                "height": (
+                    "INT",
+                    {"default": 1024, "min": 8, "max": 16384, "step": 8},
+                ),
             },
         }
 
     @classmethod
-    def calculate(cls, aspect_ratio: str, megapixels: float, multiple: int):
-        width_ratio, height_ratio = ASPECT_RATIOS[aspect_ratio]
-        total_pixels = megapixels * 1024 * 1024
-        scale = math.sqrt(total_pixels / (width_ratio * height_ratio))
-        width = round(width_ratio * scale / multiple) * multiple
-        height = round(height_ratio * scale / multiple) * multiple
-        return width, height
+    def calculate(
+        cls,
+        aspect_ratio: str,
+        megapixels: float,
+        multiple: int,
+        width: int = 1024,
+        height: int = 1024,
+    ):
+        return resolve_resolution(aspect_ratio, megapixels, multiple, width, height)

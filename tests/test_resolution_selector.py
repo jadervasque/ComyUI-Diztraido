@@ -17,6 +17,8 @@ def _load_resolution_selector_module():
 
 resolution_selector = _load_resolution_selector_module()
 ASPECT_RATIOS = resolution_selector.ASPECT_RATIOS
+ASPECT_RATIO_OPTIONS = resolution_selector.ASPECT_RATIO_OPTIONS
+CUSTOM_ASPECT_RATIO = resolution_selector.CUSTOM_ASPECT_RATIO
 DiztraidoResolutionSelector = resolution_selector.DiztraidoResolutionSelector
 
 
@@ -42,24 +44,33 @@ class ResolutionSelectorTests(unittest.TestCase):
         for label, ratio in expected_additions.items():
             with self.subTest(label=label):
                 self.assertEqual(ASPECT_RATIOS[label], ratio)
+        self.assertEqual(ASPECT_RATIO_OPTIONS[-1], CUSTOM_ASPECT_RATIO)
 
     def test_matches_native_resolution_calculation(self):
         self.assertEqual(
-            DiztraidoResolutionSelector.calculate("1:1 (Square)", 1.0, 8),
+            DiztraidoResolutionSelector.calculate("1:1 (Square)", 1.0, 8, 640, 480),
             (1024, 1024),
         )
         width, height = DiztraidoResolutionSelector.calculate(
-            "3:1 (Panoramic Landscape)", 1.0, 8
+            "3:1 (Panoramic Landscape)", 1.0, 8, 640, 480
         )
         self.assertGreater(width, height)
         self.assertEqual(width % 8, 0)
         self.assertEqual(height % 8, 0)
 
-    def test_exposes_native_inputs_and_outputs(self):
+    def test_custom_mode_uses_exact_dimensions(self):
+        self.assertEqual(
+            DiztraidoResolutionSelector.calculate(CUSTOM_ASPECT_RATIO, 1.0, 64, 1232, 832),
+            (1232, 832),
+        )
+
+    def test_exposes_custom_inputs_and_outputs(self):
         required = DiztraidoResolutionSelector.INPUT_TYPES()["required"]
-        self.assertEqual(required["aspect_ratio"][0], list(ASPECT_RATIOS))
+        self.assertEqual(required["aspect_ratio"][0], ASPECT_RATIO_OPTIONS)
         self.assertEqual(required["megapixels"][1]["default"], 1.0)
         self.assertEqual(required["multiple"][1]["default"], 8)
+        self.assertEqual(required["width"][1]["default"], 1024)
+        self.assertEqual(required["height"][1]["default"], 1024)
         self.assertEqual(DiztraidoResolutionSelector.RETURN_NAMES, ("width", "height"))
 
 
