@@ -6,7 +6,8 @@ import os
 
 import folder_paths
 
-from ..services.composed_pipelines import MAX_REFERENCES, build_reference_conditioning_from_prompt
+from ..services.composed_pipelines import MAX_REFERENCES
+from ..services.reference_conditioning import build_reference_conditioning_from_prompt
 
 
 class DiztraidoReferenceChain:
