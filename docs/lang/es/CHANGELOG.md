@@ -11,6 +11,11 @@ El formato sigue los principios de [Keep a Changelog](https://keepachangelog.com
 ### Añadido
 
 - `String Manager`, nodo utilitario dinámico que almacena hasta 24 prompts multilínea con opciones de relación de aspecto correspondientes y devuelve el prompt y la proporción seleccionados para usarlos directamente con `Resolution Selector Extended`.
+- Placeholders de línea opcional de `String Format`, como `{1?}`, y bloques condicionales de línea completa `@if` / `@else` / `@endif`, incluidos bloques anidados y limpieza de comas finales segura para JSON.
+
+### Cambiado
+
+- `String Format` ahora acepta llaves JSON literales normales sin exigir que se dupliquen.
 
 ## [0.1.0] - 2026-07-27
 
