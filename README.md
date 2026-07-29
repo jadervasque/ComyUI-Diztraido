@@ -18,6 +18,7 @@ A collection of custom nodes for ComfyUI focused on Flux workflow composition, m
 - Reference-image chaining with conditioning and guidance.
 - Composite sampling and decoding pipeline.
 - Resolution selection by aspect ratio and megapixel target.
+- Multi-prompt management with one aspect ratio associated with each prompt.
 - String formatting with dynamic inputs and conditional expressions.
 - JavaScript extensions for dynamic widgets and previews.
 - Unit tests and continuous integration with GitHub Actions.
@@ -76,6 +77,7 @@ The repository does not declare additional mandatory Python runtime dependencies
 | Metadata | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
 | Utilities | Backend Random Seed | `BackendRandomSeed` |
 | Utilities | Resolution Selector Extended | `DiztraidoResolutionSelector` |
+| Utilities | String Manager | `DiztraidoStringManager` |
 | Utilities | String Format | `DiztraidoStringFormat` |
 | Flux | Flux Load References | `DiztraidoReferenceChain` |
 | Flux | Flux Sampler | `DiztraidoProcessingBundle` |
