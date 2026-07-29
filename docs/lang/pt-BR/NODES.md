@@ -35,6 +35,16 @@ Este documento descreve os nós registrados pelo ComfyUI-Diztraido. Os nomes int
 - **Saídas:** `width` e `height`.
 - **Frontend:** exibe a resolução calculada em tempo real.
 
+### String Manager
+
+- **ID:** `DiztraidoStringManager`
+- **Finalidade:** armazenar até 24 prompts multilinha, associar cada prompt a uma opção de proporção e retornar o par selecionado.
+- **Widgets:** `num_fields` controla a quantidade de pares prompt/proporção visíveis; `selected_string` escolhe o par ativo.
+- **Widgets por campo:** um prompt multilinha e um combo de proporção com as mesmas opções do **Resolution Selector Extended**.
+- **Saídas:** `string_selected` e `resolution_selected`.
+- **Conexão:** conecte `resolution_selected` diretamente à entrada `aspect_ratio` do **Resolution Selector Extended**. Megapixels, múltiplo de alinhamento e dimensões personalizadas continuam controlados por esse único nó seletor.
+- **Automação:** `selected_string` oferece o controle pós-geração do ComfyUI, permitindo selecionar sequencialmente prompts e proporções em gerações enfileiradas.
+
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`
