@@ -48,7 +48,7 @@ This document describes the nodes registered by ComfyUI-Diztraido. Internal name
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`
-- **Purpose:** composes strings with dynamic inputs and conditional expressions.
+- **Purpose:** composes strings with dynamic inputs, optional lines, and conditional expressions.
 - **Dynamic inputs:** `STRING`, `INT`, `FLOAT`, and `BOOLEAN`.
 - **Output:** `string`.
 
@@ -56,16 +56,31 @@ This document describes the nodes registered by ComfyUI-Diztraido. Internal name
 
 1. Set `input_count` to create `input_1`, `input_2`, and subsequent inputs.
 2. Connect the values.
-3. Use `{1}`, `{2}`, and other positions in the template.
-4. Enable `single_line_output` to normalize paragraphs and line breaks.
+3. Use `{1}`, `{2}`, and other positions for normal substitution.
+4. Use `{1?}`, `{2?}`, and so on when the entire physical line must be removed if that input is `None` or an empty/whitespace-only string. Numeric zero and Boolean `false` are preserved as valid values.
+5. Use whole-line `@if condition`, `@else`, and `@endif` directives for conditional blocks. Blocks can be nested and use the same operators as inline ternaries.
+6. Enable `single_line_output` to normalize paragraphs and line breaks.
+
+Literal object braces, including normal JSON `{` and `}`, can be written directly. Double braces remain available when a placeholder-looking sequence must be preserved literally. When optional lines or conditional blocks are removed, structural trailing commas before `}` or `]` are cleaned automatically.
 
 #### Examples
 
 - `File_{1}_test_{2}` produces `File_image_test_10` for `image` and `10`.
+- `"style": "{1?}",` removes that whole line when `input_1` is empty.
 - `@{{1}?"Text A":"Text B"}` selects text using `input_1`.
 - `@{{1}=={2}?"Equal":"Different"}` compares values while preserving their types.
 - `@{{1}&&{2}?"Both":"Other"}` requires two true inputs.
 - `@{!({1}||{2})?"Neither":"Any"}` combines negation and grouping.
+- A block can contain raw JSON without escaping quotes or braces:
+
+```text
+@if {1}
+  "style": "{2}",
+@else
+  "style": "default",
+@endif
+```
+
 - `{{name}}_{1}` preserves the literal key and inserts the first value.
 - Lines beginning with `#`, including after whitespace, are removed from the output.
 
