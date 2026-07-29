@@ -113,7 +113,7 @@ function updateVisibleLoras(node, countWidget, groups, layout, mode = "preserve"
                 strengthModelWidget.value = 1.0;
             }
             if (strengthClipWidget) {
-                strengthClipWidget.value = 1.0;
+                strengthClipWidget.value = 0.0;
             }
         }
         for (const widget of group) {
