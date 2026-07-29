@@ -5,6 +5,7 @@ const NODE_CLASSES = new Set([
     "DiztraidoProcessingBundle",
 ]);
 const CUSTOM_ASPECT_RATIO = "Custom";
+const MIN_NODE_WIDTH = 180;
 
 function roundTiesToEven(value) {
     const lower = Math.floor(value);
@@ -15,14 +16,20 @@ function roundTiesToEven(value) {
     return Math.round(value);
 }
 
+function clampInteger(value, minimum, maximum, fallback) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+        return fallback;
+    }
+    return Math.max(minimum, Math.min(maximum, Math.trunc(parsed)));
+}
+
 function calculateResolution(aspectRatio, megapixels, multiple, width, height) {
     if (aspectRatio === CUSTOM_ASPECT_RATIO) {
-        const customWidth = Number(width);
-        const customHeight = Number(height);
-        if (!Number.isFinite(customWidth) || !Number.isFinite(customHeight)) {
-            return null;
-        }
-        return [Math.trunc(customWidth), Math.trunc(customHeight)];
+        return [
+            clampInteger(width, 8, 16384, 1024),
+            clampInteger(height, 8, 16384, 1024),
+        ];
     }
 
     const match = String(aspectRatio ?? "").match(/^(\d+):(\d+)/);
@@ -40,6 +47,15 @@ function calculateResolution(aspectRatio, megapixels, multiple, width, height) {
         roundTiesToEven(widthRatio * scale / targetMultiple) * targetMultiple,
         roundTiesToEven(heightRatio * scale / targetMultiple) * targetMultiple,
     ];
+}
+
+function constrainWidgetInput(widget) {
+    if (!widget?.inputEl) {
+        return;
+    }
+    widget.inputEl.style.boxSizing = "border-box";
+    widget.inputEl.style.maxWidth = "100%";
+    widget.inputEl.style.minWidth = "0";
 }
 
 function setWidgetVisible(widget, visible) {
@@ -62,16 +78,25 @@ function setWidgetVisible(widget, visible) {
         widget.type = "diztraido-hidden-widget";
         widget.computeSize = () => [0, -4];
     }
+
+    if (widget.inputEl) {
+        widget.inputEl.style.display = visible ? "" : "none";
+        constrainWidgetInput(widget);
+    }
 }
 
-function resizeNodeToWidgets(node) {
+function resizeNodeHeightToWidgets(node) {
     const computed = node.computeSize?.();
     if (!computed) {
         return;
     }
+
+    const currentWidth = Number(node.size?.[0]) || Number(computed[0]) || MIN_NODE_WIDTH;
+    const computedHeight = Number(computed[1]);
+    const currentHeight = Number(node.size?.[1]) || 0;
     node.setSize?.([
-        Math.max(Number(node.size?.[0]) || 0, Number(computed[0]) || 0),
-        Number(computed[1]) || Number(node.size?.[1]) || 0,
+        Math.max(MIN_NODE_WIDTH, currentWidth),
+        Number.isFinite(computedHeight) ? computedHeight : currentHeight,
     ]);
 }
 
@@ -88,6 +113,14 @@ function configureResolutionWidgets(node) {
     if (!aspectRatioWidget || !megapixelsWidget || !multipleWidget || !widthWidget || !heightWidget) {
         return;
     }
+
+    const controlledWidgets = [
+        aspectRatioWidget,
+        megapixelsWidget,
+        multipleWidget,
+        widthWidget,
+        heightWidget,
+    ];
 
     const previewWidget = node.addCustomWidget({
         name: "resolution_preview",
@@ -114,6 +147,10 @@ function configureResolutionWidgets(node) {
         setWidgetVisible(widthWidget, customMode);
         setWidgetVisible(heightWidget, customMode);
 
+        for (const widget of controlledWidgets) {
+            constrainWidgetInput(widget);
+        }
+
         const resolution = calculateResolution(
             aspectRatioWidget.value,
             megapixelsWidget.value,
@@ -125,11 +162,11 @@ function configureResolutionWidgets(node) {
             ? `Output: ${resolution[0]} × ${resolution[1]} px`
             : "Output: unavailable";
 
-        resizeNodeToWidgets(node);
+        resizeNodeHeightToWidgets(node);
         node.setDirtyCanvas?.(true, true);
     };
 
-    for (const widget of [aspectRatioWidget, megapixelsWidget, multipleWidget, widthWidget, heightWidget]) {
+    for (const widget of controlledWidgets) {
         const originalCallback = widget.callback;
         widget.callback = function () {
             const result = originalCallback?.apply(this, arguments);
@@ -137,6 +174,16 @@ function configureResolutionWidgets(node) {
             return result;
         };
     }
+
+    const originalOnResize = node.onResize;
+    node.onResize = function () {
+        const result = originalOnResize?.apply(this, arguments);
+        for (const widget of controlledWidgets) {
+            constrainWidgetInput(widget);
+        }
+        this.setDirtyCanvas?.(true, true);
+        return result;
+    };
 
     node.__diztraidoRefreshResolutionPreview = refresh;
     node.__diztraidoResolutionConfigured = true;
