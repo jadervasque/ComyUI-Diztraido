@@ -48,7 +48,7 @@ Este documento descreve os nós registrados pelo ComfyUI-Diztraido. Os nomes int
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`
-- **Finalidade:** compor strings com entradas dinâmicas e expressões condicionais.
+- **Finalidade:** compor strings com entradas dinâmicas, linhas opcionais e expressões condicionais.
 - **Entradas dinâmicas:** `STRING`, `INT`, `FLOAT` e `BOOLEAN`.
 - **Saída:** `string`.
 
@@ -56,16 +56,31 @@ Este documento descreve os nós registrados pelo ComfyUI-Diztraido. Os nomes int
 
 1. Defina `input_count` para criar `input_1`, `input_2` e entradas subsequentes.
 2. Conecte os valores.
-3. Use `{1}`, `{2}` e demais posições no template.
-4. Ative `single_line_output` para normalizar parágrafos e quebras de linha.
+3. Use `{1}`, `{2}` e demais posições para substituição normal.
+4. Use `{1?}`, `{2?}` e assim por diante quando toda a linha física deve ser removida se a entrada for `None` ou uma string vazia/composta apenas por espaços. O número zero e o booleano `false` são preservados como valores válidos.
+5. Use as diretivas de linha inteira `@if condição`, `@else` e `@endif` para blocos condicionais. Os blocos podem ser aninhados e usam os mesmos operadores dos ternários inline.
+6. Ative `single_line_output` para normalizar parágrafos e quebras de linha.
+
+Chaves literais de objetos, incluindo `{` e `}` normais de JSON, podem ser escritas diretamente. Chaves duplas continuam disponíveis quando uma sequência semelhante a placeholder precisa ser preservada literalmente. Quando linhas opcionais ou blocos condicionais são removidos, vírgulas estruturais finais antes de `}` ou `]` são eliminadas automaticamente.
 
 #### Exemplos
 
 - `File_{1}_teste_{2}` produz `File_image_teste_10` para `image` e `10`.
+- `"style": "{1?}",` remove a linha inteira quando `input_1` estiver vazio.
 - `@{{1}?"Texto A":"Texto B"}` escolhe um texto usando `input_1`.
 - `@{{1}=={2}?"Iguais":"Diferentes"}` compara preservando os tipos.
 - `@{{1}&&{2}?"Ambos":"Outro"}` exige duas entradas verdadeiras.
 - `@{!({1}||{2})?"Nenhum":"Algum"}` combina negação e agrupamento.
+- Um bloco pode conter JSON bruto sem escapar aspas ou chaves:
+
+```text
+@if {1}
+  "style": "{2}",
+@else
+  "style": "default",
+@endif
+```
+
 - `{{nome}}_{1}` preserva a chave literal e insere o primeiro valor.
 - Linhas iniciadas por `#`, inclusive após espaços, são removidas da saída.
 
