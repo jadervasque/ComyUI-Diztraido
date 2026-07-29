@@ -1,4 +1,4 @@
-"""Testes do contrato publico do no Flux Load References."""
+"""Tests for the public Flux Load References node contract."""
 
 from __future__ import annotations
 
@@ -23,6 +23,10 @@ def _load_reference_chain_module():
     nodes_package.__path__ = [str(root / "nodes")]
     services_package = types.ModuleType(f"{package_name}.services")
     services_package.__path__ = [str(root / "services")]
+    reference_conditioning = types.ModuleType(
+        f"{package_name}.services.reference_conditioning"
+    )
+    reference_conditioning.build_reference_conditioning_from_prompt = Mock()
     folder_paths = types.ModuleType("folder_paths")
 
     modules = {
@@ -30,6 +34,7 @@ def _load_reference_chain_module():
         f"{package_name}.nodes": nodes_package,
         f"{package_name}.services": services_package,
         f"{package_name}.services.composed_pipelines": composed_pipelines,
+        f"{package_name}.services.reference_conditioning": reference_conditioning,
         "folder_paths": folder_paths,
     }
 
@@ -67,16 +72,19 @@ class ReferenceChainNodeTests(unittest.TestCase):
             ("positive", "blank_negative"),
         )
 
-    def test_contract_removes_guidance_and_initial_latent(self):
+    def test_contract_uses_combo_and_optional_image_inputs(self):
         module = _load_reference_chain_module()
-        module.DiztraidoReferenceChain._image_options = staticmethod(
-            lambda: ([""], {"image_upload": True})
-        )
+        module.DiztraidoReferenceChain._image_options = staticmethod(lambda: ([""], {}))
         inputs = module.DiztraidoReferenceChain.INPUT_TYPES()
+
         self.assertNotIn("guidance", inputs["required"])
         self.assertNotIn("initial_latent", inputs.get("optional", {}))
         self.assertIn("clip", inputs["required"])
         self.assertIn("vae", inputs["required"])
+        self.assertIn("image_ref_1", inputs["required"])
+        self.assertEqual(inputs["required"]["image_ref_1"][1], {})
+        self.assertEqual(inputs["optional"]["image_input_1"], ("IMAGE",))
+        self.assertEqual(inputs["optional"]["image_input_16"], ("IMAGE",))
 
 
 if __name__ == "__main__":
