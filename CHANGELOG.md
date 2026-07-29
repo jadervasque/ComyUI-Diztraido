@@ -8,6 +8,10 @@ The format follows the principles of [Keep a Changelog](https://keepachangelog.c
 
 ## [Unreleased]
 
+### Added
+
+- `String Manager`, a dynamic utility node that stores up to 24 multiline prompts with matching aspect-ratio options and outputs the selected prompt and ratio for direct use with `Resolution Selector Extended`.
+
 ## [0.1.0] - 2026-07-27
 
 ### Added

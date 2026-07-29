@@ -35,6 +35,16 @@ Este documento describe los nodos registrados por ComfyUI-Diztraido. Los nombres
 - **Salidas:** `width` y `height`.
 - **Frontend:** muestra la resolución calculada en tiempo real.
 
+### String Manager
+
+- **ID:** `DiztraidoStringManager`
+- **Finalidad:** almacenar hasta 24 prompts multilínea, asociar cada prompt con una opción de relación de aspecto y devolver el par seleccionado.
+- **Widgets:** `num_fields` controla la cantidad de pares prompt/proporción visibles; `selected_string` elige el par activo.
+- **Widgets por campo:** un prompt multilínea y un combo de relación de aspecto con las mismas opciones que **Resolution Selector Extended**.
+- **Salidas:** `string_selected` y `resolution_selected`.
+- **Conexión:** conecte `resolution_selected` directamente a la entrada `aspect_ratio` de **Resolution Selector Extended**. Los megapíxeles, el múltiplo de alineación y las dimensiones personalizadas permanecen controlados por ese único nodo selector.
+- **Automatización:** `selected_string` admite el control posterior a la generación de ComfyUI, lo que permite seleccionar secuencialmente prompts y proporciones en generaciones en cola.
+
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`

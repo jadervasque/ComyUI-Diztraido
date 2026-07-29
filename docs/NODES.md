@@ -35,6 +35,16 @@ This document describes the nodes registered by ComfyUI-Diztraido. Internal name
 - **Outputs:** `width` and `height`.
 - **Frontend:** displays the calculated resolution in real time.
 
+### String Manager
+
+- **ID:** `DiztraidoStringManager`
+- **Purpose:** stores up to 24 multiline prompts, associates each prompt with an aspect-ratio option, and returns the selected pair.
+- **Widgets:** `num_fields` controls the number of visible prompt/ratio pairs; `selected_string` chooses the active pair.
+- **Per-field widgets:** one multiline prompt and one aspect-ratio combo using the same options as **Resolution Selector Extended**.
+- **Outputs:** `string_selected` and `resolution_selected`.
+- **Connection:** connect `resolution_selected` directly to the `aspect_ratio` input of **Resolution Selector Extended**. Megapixels, alignment multiple, and custom dimensions remain controlled by that single selector node.
+- **Automation:** `selected_string` supports ComfyUI's after-generation control, allowing sequential prompt/resolution selection across queued generations.
+
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`
