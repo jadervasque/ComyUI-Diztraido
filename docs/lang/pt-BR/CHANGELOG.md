@@ -8,6 +8,10 @@ O formato segue os princípios do [Keep a Changelog](https://keepachangelog.com/
 
 ## [Não lançado]
 
+### Adicionado
+
+- `String Manager`, nó utilitário dinâmico que armazena até 24 prompts multilinha com opções de proporção correspondentes e retorna o prompt e a proporção selecionados para uso direto com o `Resolution Selector Extended`.
+
 ## [0.1.0] - 2026-07-27
 
 ### Adicionado
