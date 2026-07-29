@@ -18,6 +18,7 @@ Colección de nodos personalizados para ComfyUI, centrada en la composición de 
 - Encadenamiento de imágenes de referencia con conditioning y guidance.
 - Pipeline compuesto de muestreo y decodificación.
 - Selector de resolución por relación de aspecto y megapíxeles.
+- Gestión de múltiples prompts con una relación de aspecto asociada a cada prompt.
 - Formateo de cadenas con entradas dinámicas y expresiones condicionales.
 - Extensiones JavaScript para widgets y vistas previas dinámicas.
 - Pruebas unitarias e integración continua con GitHub Actions.
@@ -76,6 +77,7 @@ El repositorio no declara dependencias adicionales obligatorias de Python en tie
 | Metadatos | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
 | Utilidades | Backend Random Seed | `BackendRandomSeed` |
 | Utilidades | Resolution Selector Extended | `DiztraidoResolutionSelector` |
+| Utilidades | String Manager | `DiztraidoStringManager` |
 | Utilidades | String Format | `DiztraidoStringFormat` |
 | Flux | Flux Load References | `DiztraidoReferenceChain` |
 | Flux | Flux Sampler | `DiztraidoProcessingBundle` |
