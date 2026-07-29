@@ -18,6 +18,7 @@ Coleção de nós personalizados para o ComfyUI, com foco em composição de wor
 - Encadeamento de imagens de referência com conditioning e guidance.
 - Pipeline composto de amostragem e decodificação.
 - Seletor de resolução por proporção e megapixels.
+- Gerenciamento de múltiplos prompts com uma proporção associada a cada prompt.
 - Formatação de strings com entradas dinâmicas e expressões condicionais.
 - Extensões JavaScript para widgets e pré-visualizações dinâmicas.
 - Testes unitários e integração contínua no GitHub Actions.
@@ -76,6 +77,7 @@ O repositório não declara dependências Python adicionais obrigatórias de run
 | Metadados | Diztraido: Metadata Reader Advanced | `DiztraidoImageMetadataReaderAdvanced` |
 | Utilidades | Backend Random Seed | `BackendRandomSeed` |
 | Utilidades | Resolution Selector Extended | `DiztraidoResolutionSelector` |
+| Utilidades | String Manager | `DiztraidoStringManager` |
 | Utilidades | String Format | `DiztraidoStringFormat` |
 | Flux | Flux Load References | `DiztraidoReferenceChain` |
 | Flux | Flux Sampler | `DiztraidoProcessingBundle` |
