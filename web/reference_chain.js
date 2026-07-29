@@ -2,10 +2,10 @@ import { app } from "../../scripts/app.js";
 
 const NODE_CLASS = "DiztraidoReferenceChain";
 const MAX_REFERENCES = 16;
+const INPUT_PREFIX = "image_input_";
+const INPUT_TYPE = "IMAGE";
 
 function disableNativePreview(node) {
-    // ComfyUI pode manter preview interno do primeiro widget de imagem.
-    // Limpamos estados conhecidos para evitar renderizacao desse bloco no rodape do no.
     node.imgs = null;
     node.images = null;
     node.imageIndex = null;
@@ -17,33 +17,6 @@ function resolveInputImageUrl(imageName) {
         return "";
     }
     return `/view?filename=${encodeURIComponent(String(imageName))}&type=input`;
-}
-
-function setWidgetVisibility(widget, visible) {
-    if (!widget) {
-        return;
-    }
-
-    if (!Object.prototype.hasOwnProperty.call(widget, "__diztraidoOriginalComputeSize")) {
-        widget.__diztraidoOriginalComputeSize = widget.computeSize;
-    }
-
-    widget.hidden = !visible;
-    widget.computeSize = visible
-        ? widget.__diztraidoOriginalComputeSize
-        : () => [0, -4];
-
-    if (widget.inputEl) {
-        widget.inputEl.style.display = visible ? "" : "none";
-    }
-}
-
-function getReferenceWidgets(node) {
-    const references = [];
-    for (let index = 1; index <= MAX_REFERENCES; index += 1) {
-        references.push(node.widgets?.find((widget) => widget.name === `image_ref_${index}`));
-    }
-    return references;
 }
 
 function clampCount(value) {
@@ -62,43 +35,144 @@ function defer(callback, rounds = 1) {
     requestAnimationFrame(() => defer(callback, rounds - 1));
 }
 
-function updateVisibleReferences(node, countWidget, referenceWidgets) {
-    const count = clampCount(countWidget?.value ?? 0);
-    if (countWidget) {
-        countWidget.value = count;
+function setWidgetVisibility(widget, visible) {
+    if (!widget) {
+        return;
     }
 
-    referenceWidgets.forEach((widget, index) => {
-        const visible = index < count;
-        if (!visible && widget) {
-            widget.value = "";
-        }
-        setWidgetVisibility(widget, visible);
-    });
+    if (!widget.__diztraidoVisibilityState) {
+        widget.__diztraidoVisibilityState = {
+            type: widget.type,
+            computeSize: widget.computeSize,
+        };
+    }
 
-    disableNativePreview(node);
-    node.setDirtyCanvas(true, true);
+    widget.hidden = !visible;
+    if (visible) {
+        widget.type = widget.__diztraidoVisibilityState.type;
+        widget.computeSize = widget.__diztraidoVisibilityState.computeSize;
+    } else {
+        widget.type = "diztraido-hidden-widget";
+        widget.computeSize = () => [0, -4];
+    }
+
+    if (widget.inputEl) {
+        widget.inputEl.style.display = visible ? "" : "none";
+    }
 }
 
-function renderReferencesPreview(previewRoot, count, referenceWidgets) {
-    if (!previewRoot) {
-        return;
+function getReferenceWidgets(node) {
+    const widgets = [];
+    for (let index = 1; index <= MAX_REFERENCES; index += 1) {
+        widgets.push(node.widgets?.find((widget) => widget.name === `image_ref_${index}`));
+    }
+    return widgets;
+}
+
+function getDynamicReferenceInputs(node) {
+    return (node.inputs ?? []).filter((input) => input.name?.startsWith(INPUT_PREFIX));
+}
+
+function rebuildReferenceInputs(node, countWidget, reset = false) {
+    const target = clampCount(countWidget?.value ?? 0);
+    if (countWidget) {
+        countWidget.value = target;
     }
 
-    previewRoot.innerHTML = "";
+    let inputs = getDynamicReferenceInputs(node);
+    if (reset) {
+        for (const input of [...inputs].reverse()) {
+            node.removeInput(node.inputs.indexOf(input));
+        }
+        inputs = [];
+    }
+
+    while (inputs.length > target) {
+        const input = inputs.at(-1);
+        node.removeInput(node.inputs.indexOf(input));
+        inputs = getDynamicReferenceInputs(node);
+    }
+
+    const existing = new Set(inputs.map((input) => input.name));
+    for (let index = 1; index <= target; index += 1) {
+        const name = `${INPUT_PREFIX}${index}`;
+        if (!existing.has(name)) {
+            node.addInput(name, INPUT_TYPE);
+        }
+    }
+
+    for (const input of getDynamicReferenceInputs(node)) {
+        const index = Number(String(input.name).slice(INPUT_PREFIX.length));
+        input.type = INPUT_TYPE;
+        input.label = Number.isFinite(index) ? `Reference ${index} input` : input.name;
+    }
+}
+
+function isDirectInputConnected(node, index) {
+    const input = node.inputs?.find((item) => item.name === `${INPUT_PREFIX}${index}`);
+    return input?.link != null;
+}
+
+function fitNodeToContent(node, minWidth = 360) {
+    if (!node || typeof node.computeSize !== "function" || typeof node.setSize !== "function") {
+        return;
+    }
+    const computed = node.computeSize();
+    const currentWidth = Number(node.size?.[0]) || Number(computed?.[0]) || minWidth;
+    const height = Math.max(0, Number(computed?.[1]) || 0);
+    node.setSize([Math.max(minWidth, currentWidth), height]);
+}
+
+function createPreviewController(node) {
+    const container = document.createElement("div");
+    container.style.display = "none";
+    container.style.gridTemplateColumns = "1fr";
+    container.style.gap = "8px";
+    container.style.width = "100%";
+    container.style.height = "170px";
+    container.style.maxHeight = "170px";
+    container.style.overflowY = "hidden";
+    container.style.padding = "2px";
+
+    let visible = false;
+    const widget = node.addDOMWidget(
+        "references_preview",
+        "diztraido-reference-preview",
+        container,
+        {
+            serialize: false,
+            hideOnZoom: false,
+            getMinHeight: () => (visible ? 180 : 0),
+            getMaxHeight: () => (visible ? 180 : 0),
+            getHeight: () => (visible ? 180 : 0),
+        },
+    );
+    widget.computeSize = (width) => (visible ? [Math.max(0, width), 180] : [0, -4]);
+
+    const setVisible = (nextVisible) => {
+        visible = Boolean(nextVisible);
+        container.style.display = visible ? "grid" : "none";
+        container.style.overflowY = visible ? "auto" : "hidden";
+        if (!visible) {
+            container.innerHTML = "";
+        }
+    };
+
+    return { container, setVisible };
+}
+
+function renderReferencesPreview(node, preview, count, referenceWidgets) {
     const activeCount = clampCount(count);
-    if (!activeCount) {
-        const empty = document.createElement("div");
-        empty.textContent = "No active references.";
-        empty.style.opacity = "0.7";
-        empty.style.fontSize = "12px";
-        previewRoot.appendChild(empty);
-        return;
-    }
+    preview.container.innerHTML = "";
+    let rendered = 0;
 
-    for (let index = 0; index < activeCount; index += 1) {
-        const widget = referenceWidgets[index];
-        const imageName = widget?.value;
+    for (let offset = 0; offset < activeCount; offset += 1) {
+        const index = offset + 1;
+        if (isDirectInputConnected(node, index)) {
+            continue;
+        }
+
+        const imageName = referenceWidgets[offset]?.value;
         if (!imageName) {
             continue;
         }
@@ -109,7 +183,7 @@ function renderReferencesPreview(previewRoot, count, referenceWidgets) {
         card.style.gap = "4px";
 
         const label = document.createElement("div");
-        label.textContent = `Ref ${index + 1}: ${String(imageName)}`;
+        label.textContent = `Reference ${index}: ${String(imageName)}`;
         label.style.fontSize = "11px";
         label.style.whiteSpace = "nowrap";
         label.style.overflow = "hidden";
@@ -118,143 +192,136 @@ function renderReferencesPreview(previewRoot, count, referenceWidgets) {
         const image = document.createElement("img");
         image.src = resolveInputImageUrl(imageName);
         image.loading = "lazy";
-        image.alt = `Reference ${index + 1}`;
+        image.alt = `Reference ${index}`;
         image.style.display = "block";
         image.style.width = "100%";
-        image.style.height = "100%";
+        image.style.height = "140px";
         image.style.objectFit = "contain";
         image.style.border = "1px solid rgba(255,255,255,0.15)";
         image.style.borderRadius = "4px";
         image.style.background = "rgba(0, 0, 0, 0.18)";
-        image.style.minHeight = "120px";
         image.addEventListener("error", () => {
-            image.style.display = "none";
+            card.remove();
+            if (!preview.container.childElementCount) {
+                preview.setVisible(false);
+                fitNodeToContent(node);
+            }
         });
 
         card.appendChild(label);
         card.appendChild(image);
-        previewRoot.appendChild(card);
+        preview.container.appendChild(card);
+        rendered += 1;
     }
 
-    if (!previewRoot.childElementCount) {
-        const empty = document.createElement("div");
-        empty.textContent = "Select an image for each active reference.";
-        empty.style.opacity = "0.7";
-        empty.style.fontSize = "12px";
-        previewRoot.appendChild(empty);
-    }
-}
-
-function createPreviewWidget(node, getReferenceCount) {
-    const container = document.createElement("div");
-    container.style.display = "grid";
-    container.style.gridTemplateColumns = "1fr";
-    container.style.gap = "8px";
-    container.style.width = "100%";
-    container.style.height = "26px";
-    container.style.maxHeight = "26px";
-    container.style.overflowY = "auto";
-    container.style.padding = "2px";
-
-    const layoutState = {
-        previewHeight: 26,
-        expandedPreviewHeight: 180,
-        resizedWhileCollapsed: false,
-        lastNodeHeight: Number(node?.size?.[1]) || null,
-        lastReferenceCount: clampCount(getReferenceCount?.() ?? 0),
-    };
-
-    const widget = node.addDOMWidget(
-        "references_preview",
-        "diztraido-reference-preview",
-        container,
-        {
-            serialize: false,
-            hideOnZoom: false,
-            getMinHeight: () => layoutState.previewHeight,
-            getMaxHeight: () => layoutState.previewHeight,
-            getHeight: () => layoutState.previewHeight,
-        },
-    );
-
-    const setPreviewHeight = (height) => {
-        const previewHeight = Math.max(26, Math.round(height));
-        layoutState.previewHeight = previewHeight;
-        container.style.height = `${previewHeight - 10}px`;
-        container.style.maxHeight = `${previewHeight - 10}px`;
-        return previewHeight;
-    };
-
-    const syncLayout = ({ fromResize = false } = {}) => {
-        const currentCount = clampCount(getReferenceCount?.() ?? 0);
-        const nodeHeight = Number(node?.size?.[1]) || layoutState.lastNodeHeight;
-
-        if (fromResize && nodeHeight && layoutState.lastNodeHeight && currentCount > 0) {
-            const deltaHeight = nodeHeight - layoutState.lastNodeHeight;
-            if (deltaHeight) {
-                setPreviewHeight(layoutState.previewHeight + deltaHeight);
-                layoutState.expandedPreviewHeight = Math.max(160, layoutState.previewHeight);
-            }
-        } else if (fromResize && nodeHeight && layoutState.lastNodeHeight) {
-            const deltaHeight = nodeHeight - layoutState.lastNodeHeight;
-            if (deltaHeight) {
-                const baseHeight = layoutState.resizedWhileCollapsed
-                    ? layoutState.expandedPreviewHeight
-                    : layoutState.previewHeight;
-                layoutState.expandedPreviewHeight = Math.max(180, baseHeight + deltaHeight);
-                layoutState.resizedWhileCollapsed = true;
-            }
-        }
-
-        if (currentCount <= 0) {
-            setPreviewHeight(26);
-        } else if (layoutState.lastReferenceCount <= 0) {
-            setPreviewHeight(layoutState.expandedPreviewHeight);
-        } else if (!fromResize) {
-            setPreviewHeight(layoutState.previewHeight || layoutState.expandedPreviewHeight);
-        }
-
-        if (currentCount > 0) {
-            layoutState.expandedPreviewHeight = Math.max(160, layoutState.previewHeight);
-        }
-
-        layoutState.lastReferenceCount = currentCount;
-        layoutState.lastNodeHeight = nodeHeight;
-        return layoutState.previewHeight;
-    };
-
-    widget.computeSize = (width) => {
-        const previewHeight = syncLayout();
-        return [Math.max(0, width), previewHeight];
-    };
-
-    syncLayout();
-    return { container, syncLayout };
+    preview.setVisible(rendered > 0);
 }
 
 function createControls(node, countWidget, onChanged) {
     const addButton = node.addWidget("button", "Add Reference", null, () => {
         countWidget.value = clampCount((countWidget.value ?? 0) + 1);
-        onChanged?.();
+        onChanged?.({ rebuildInputs: true });
     });
     addButton.options = { ...(addButton.options ?? {}), serialize: false };
 
     const removeButton = node.addWidget("button", "Remove", null, () => {
         countWidget.value = clampCount((countWidget.value ?? 0) - 1);
-        onChanged?.();
+        onChanged?.({ rebuildInputs: true });
     });
     removeButton.options = { ...(removeButton.options ?? {}), serialize: false };
+
+    return { addButton, removeButton };
 }
 
-function fitNodeToContent(node, minWidth = 540) {
-    if (!node || typeof node.computeSize !== "function" || typeof node.setSize !== "function") {
+function configureReferenceNode(node) {
+    if (node.__diztraidoReferenceControlsReady) {
         return;
     }
-    const computed = node.computeSize();
-    const currentWidth = Number(node.size?.[0]) || minWidth;
-    const width = Math.max(minWidth, currentWidth, Number(computed?.[0]) || minWidth);
-    const height = Math.max(0, Number(computed?.[1]) || 0);
-    node.setSize([width, height]);
+
+    const countWidget = node.widgets?.find((widget) => widget.name === "reference_count");
+    const referenceWidgets = getReferenceWidgets(node);
+    if (!countWidget || !referenceWidgets.length) {
+        return;
+    }
+
+    const preview = createPreviewController(node);
+    const controls = createControls(node, countWidget, refresh);
+
+    function refresh({ rebuildInputs = false, resetInputs = false, fit = true } = {}) {
+        const count = clampCount(countWidget.value);
+        countWidget.value = count;
+
+        if (rebuildInputs || resetInputs) {
+            rebuildReferenceInputs(node, countWidget, resetInputs);
+        }
+
+        referenceWidgets.forEach((widget, offset) => {
+            const index = offset + 1;
+            const active = index <= count;
+            const connected = active && isDirectInputConnected(node, index);
+            if (!active && widget) {
+                widget.value = "";
+            }
+            if (widget) {
+                widget.disabled = connected;
+                if (widget.inputEl) {
+                    widget.inputEl.disabled = connected;
+                }
+            }
+            setWidgetVisibility(widget, active && !connected);
+        });
+
+        setWidgetVisibility(controls.removeButton, count > 0);
+        renderReferencesPreview(node, preview, count, referenceWidgets);
+        disableNativePreview(node);
+
+        if (fit) {
+            fitNodeToContent(node);
+        }
+        node.setDirtyCanvas?.(true, true);
+    }
+
+    const originalCountCallback = countWidget.callback;
+    countWidget.callback = function (value) {
+        const result = originalCountCallback?.apply(this, arguments);
+        countWidget.value = clampCount(value ?? countWidget.value);
+        if (!node.__diztraidoConfiguringReferences) {
+            refresh({ rebuildInputs: true });
+        }
+        return result;
+    };
+
+    referenceWidgets.forEach((widget) => {
+        if (!widget) {
+            return;
+        }
+        const originalCallback = widget.callback;
+        widget.callback = function (value) {
+            const result = originalCallback?.apply(this, arguments);
+            if (value !== undefined) {
+                widget.value = value;
+            }
+            refresh();
+            return result;
+        };
+    });
+
+    const originalConnectionsChange = node.onConnectionsChange;
+    node.onConnectionsChange = function () {
+        const result = originalConnectionsChange?.apply(this, arguments);
+        requestAnimationFrame(() => refresh());
+        return result;
+    };
+
+    const originalOnDrawBackground = node.onDrawBackground;
+    node.onDrawBackground = function (ctx) {
+        disableNativePreview(node);
+        return originalOnDrawBackground?.call(this, ctx);
+    };
+
+    node.__diztraidoRefreshReferences = refresh;
+    node.__diztraidoReferenceControlsReady = true;
+    refresh({ resetInputs: true });
 }
 
 app.registerExtension({
@@ -265,106 +332,21 @@ app.registerExtension({
         }
 
         const originalOnNodeCreated = nodeType.prototype.onNodeCreated;
-        const originalOnConfigure = nodeType.prototype.onConfigure;
-
-        nodeType.prototype.onConfigure = function () {
-            const result = originalOnConfigure?.apply(this, arguments);
-            const sync = this.__diztraidoSyncReferences;
-            if (typeof sync === "function") {
-                // Aguarda a restauracao dos widgets do workflow antes de sincronizar a UI.
-                defer(sync, 2);
-            }
+        nodeType.prototype.onNodeCreated = function () {
+            const result = originalOnNodeCreated?.apply(this, arguments);
+            configureReferenceNode(this);
             return result;
         };
 
-        nodeType.prototype.onNodeCreated = function () {
-            const result = originalOnNodeCreated?.apply(this, arguments);
-            const node = this;
-
-            const countWidget = this.widgets?.find((widget) => widget.name === "reference_count");
-            const referenceWidgets = getReferenceWidgets(this);
-            if (!countWidget || !referenceWidgets.length) {
-                return result;
-            }
-
-            const previewWidget = createPreviewWidget(
-                node,
-                () => clampCount(countWidget?.value ?? 0),
-            );
-            const previewRoot = previewWidget.container;
-            let isFittingToContent = false;
-
-            const fitReferencesToContent = () => {
-                isFittingToContent = true;
-                fitNodeToContent(node, 540);
-                previewWidget.syncLayout();
-                isFittingToContent = false;
-            };
-
-            const refreshPreview = () => {
-                renderReferencesPreview(previewRoot, countWidget.value, referenceWidgets);
-                previewWidget.syncLayout();
-                disableNativePreview(node);
-                node.setDirtyCanvas(true, true);
-            };
-
-            const syncState = () => {
-                updateVisibleReferences(node, countWidget, referenceWidgets);
-                refreshPreview();
-            };
-
-            const updateCountAndFit = () => {
-                syncState();
-                fitReferencesToContent();
-            };
-            node.__diztraidoSyncReferences = syncState;
-
-            const originalCallback = countWidget.callback;
-            countWidget.callback = function (value) {
-                const callbackResult = originalCallback?.apply(this, arguments);
-                countWidget.value = clampCount(value ?? countWidget.value);
-                updateCountAndFit();
-                return callbackResult;
-            };
-
-            referenceWidgets.forEach((widget) => {
-                if (!widget) {
-                    return;
-                }
-                const originalImageCallback = widget.callback;
-                widget.callback = function (value) {
-                    const callbackResult = originalImageCallback?.apply(this, arguments);
-                    if (value !== undefined) {
-                        widget.value = value;
-                    }
-                    refreshPreview();
-                    return callbackResult;
-                };
-            });
-
-            createControls(node, countWidget, updateCountAndFit);
-            syncState();
-            defer(syncState, 2);
-
-            // Evita faixa vazia inicial: o no nasce com altura real dos widgets.
+        const originalOnConfigure = nodeType.prototype.onConfigure;
+        nodeType.prototype.onConfigure = function () {
+            this.__diztraidoConfiguringReferences = true;
+            const result = originalOnConfigure?.apply(this, arguments);
+            this.__diztraidoConfiguringReferences = false;
             defer(() => {
-                fitReferencesToContent();
-                refreshPreview();
+                configureReferenceNode(this);
+                this.__diztraidoRefreshReferences?.({ rebuildInputs: true });
             }, 2);
-
-            const originalOnResize = node.onResize;
-            node.onResize = function () {
-                const resizeResult = originalOnResize?.apply(this, arguments);
-                previewWidget.syncLayout({ fromResize: !isFittingToContent });
-                disableNativePreview(node);
-                return resizeResult;
-            };
-
-            const originalOnDrawBackground = node.onDrawBackground;
-            node.onDrawBackground = function (ctx) {
-                disableNativePreview(node);
-                return originalOnDrawBackground?.call(this, ctx);
-            };
             return result;
         };
     },
