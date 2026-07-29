@@ -246,6 +246,7 @@ function configureReferenceNode(node) {
 
     const preview = createPreviewController(node);
     const controls = createControls(node, countWidget, refresh);
+    setWidgetVisibility(countWidget, false);
 
     function refresh({ rebuildInputs = false, resetInputs = false, fit = true } = {}) {
         const count = clampCount(countWidget.value);
