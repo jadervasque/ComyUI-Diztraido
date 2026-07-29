@@ -19,12 +19,12 @@ MAX_INPUTS = 16
 
 
 class DiztraidoStringFormat:
-    """Formata strings com placeholders e ternarios booleanos."""
+    """Formata strings com placeholders e condicoes booleanas."""
 
     CATEGORY = "Diztraido/utils"
     DESCRIPTION = (
-        "Substitui {1}, {2}, ... e avalia ternarios como "
-        '@{{1}=={2}&&{3}?"Texto A":"Texto B"}.'
+        "Substitui {1}, {2}, ...; use {1?} para remover a linha quando a entrada "
+        "estiver vazia e @if/@else/@endif para blocos condicionais."
     )
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("string",)

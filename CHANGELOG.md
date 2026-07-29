@@ -11,6 +11,11 @@ The format follows the principles of [Keep a Changelog](https://keepachangelog.c
 ### Added
 
 - `String Manager`, a dynamic utility node that stores up to 24 multiline prompts with matching aspect-ratio options and outputs the selected prompt and ratio for direct use with `Resolution Selector Extended`.
+- `String Format` optional-line placeholders such as `{1?}` and whole-line `@if` / `@else` / `@endif` conditional blocks, including nested blocks and JSON-safe trailing-comma cleanup.
+
+### Changed
+
+- `String Format` now accepts normal literal JSON braces without requiring them to be doubled.
 
 ## [0.1.0] - 2026-07-27
 

@@ -48,7 +48,7 @@ Este documento describe los nodos registrados por ComfyUI-Diztraido. Los nombres
 ### String Format
 
 - **ID:** `DiztraidoStringFormat`
-- **Finalidad:** componer cadenas con entradas dinámicas y expresiones condicionales.
+- **Finalidad:** componer cadenas con entradas dinámicas, líneas opcionales y expresiones condicionales.
 - **Entradas dinámicas:** `STRING`, `INT`, `FLOAT` y `BOOLEAN`.
 - **Salida:** `string`.
 
@@ -56,16 +56,31 @@ Este documento describe los nodos registrados por ComfyUI-Diztraido. Los nombres
 
 1. Defina `input_count` para crear `input_1`, `input_2` y las entradas siguientes.
 2. Conecte los valores.
-3. Utilice `{1}`, `{2}` y las demás posiciones en la plantilla.
-4. Active `single_line_output` para normalizar párrafos y saltos de línea.
+3. Utilice `{1}`, `{2}` y las demás posiciones para la sustitución normal.
+4. Utilice `{1?}`, `{2?}` y las siguientes posiciones cuando deba eliminarse toda la línea física si la entrada es `None` o una cadena vacía/compuesta solo por espacios. El cero numérico y el booleano `false` se conservan como valores válidos.
+5. Utilice las directivas de línea completa `@if condición`, `@else` y `@endif` para bloques condicionales. Los bloques pueden anidarse y utilizan los mismos operadores que los ternarios inline.
+6. Active `single_line_output` para normalizar párrafos y saltos de línea.
+
+Las llaves literales de objetos, incluidas las llaves JSON normales `{` y `}`, pueden escribirse directamente. Las llaves dobles siguen disponibles cuando debe conservarse literalmente una secuencia similar a un placeholder. Cuando se eliminan líneas opcionales o bloques condicionales, las comas estructurales finales antes de `}` o `]` se limpian automáticamente.
 
 #### Ejemplos
 
 - `Archivo_{1}_prueba_{2}` produce `Archivo_image_prueba_10` para `image` y `10`.
+- `"style": "{1?}",` elimina toda la línea cuando `input_1` está vacío.
 - `@{{1}?"Texto A":"Texto B"}` selecciona un texto mediante `input_1`.
 - `@{{1}=={2}?"Iguales":"Diferentes"}` compara los valores conservando sus tipos.
 - `@{{1}&&{2}?"Ambos":"Otro"}` requiere dos entradas verdaderas.
 - `@{!({1}||{2})?"Ninguno":"Alguno"}` combina negación y agrupación.
+- Un bloque puede contener JSON sin procesar, sin escapar comillas ni llaves:
+
+```text
+@if {1}
+  "style": "{2}",
+@else
+  "style": "default",
+@endif
+```
+
 - `{{nombre}}_{1}` conserva la clave literal e inserta el primer valor.
 - Las líneas que comienzan con `#`, incluso después de espacios, se eliminan de la salida.
 
