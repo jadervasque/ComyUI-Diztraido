@@ -1,4 +1,4 @@
-"""No composto para codificar prompt e encadear referencias FLUX.2."""
+"""Composite node for encoding prompts and chaining FLUX.2 references."""
 
 from __future__ import annotations
 
@@ -6,11 +6,12 @@ import os
 
 import folder_paths
 
-from ..services.composed_pipelines import MAX_REFERENCES, build_reference_conditioning_from_prompt
+from ..services.composed_pipelines import MAX_REFERENCES
+from ..services.reference_conditioning import build_reference_conditioning_from_prompt
 
 
 class DiztraidoReferenceChain:
-    """Codifica positivo, adiciona ReferenceLatent e gera negativo vazio."""
+    """Encode positive conditioning, append references, and create a blank negative."""
 
     CATEGORY = "Diztraido/flux"
     RETURN_TYPES = ("CONDITIONING", "CONDITIONING")
@@ -26,7 +27,8 @@ class DiztraidoReferenceChain:
             if os.path.isfile(os.path.join(input_dir, name))
         ]
         image_files = folder_paths.filter_files_content_types(files, ["image"])
-        return ([""] + sorted(image_files), {"image_upload": True})
+        # Keep only the combo box. Direct uploads belong to the optional IMAGE sockets.
+        return ([""] + sorted(image_files), {})
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -37,10 +39,12 @@ class DiztraidoReferenceChain:
             "text_prompt": ("STRING", {"default": "", "multiline": True}),
             "reference_count": ("INT", {"default": 0, "min": 0, "max": MAX_REFERENCES}),
         }
+        optional = {}
         for index in range(1, MAX_REFERENCES + 1):
             required[f"image_ref_{index}"] = image_options
+            optional[f"image_input_{index}"] = ("IMAGE",)
 
-        return {"required": required}
+        return {"required": required, "optional": optional}
 
     def apply_references(self, clip, vae, text_prompt, reference_count, **kwargs):
         positive, blank_negative = build_reference_conditioning_from_prompt(
